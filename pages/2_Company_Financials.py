@@ -1,14 +1,21 @@
 """Open DART 기업 재무제표 조회 페이지."""
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from dart import (
     AMOUNT_UNITS,
     REPORT_CODES,
     fetch_financial_statements,
+    get_stock_code,
     make_pivot_table,
     split_financial_statements,
 )
+from market_data import get_company_stock_ohlc
 
 
 st.set_page_config(
@@ -30,6 +37,121 @@ def load_financial_statements(
         start_year,
         end_year,
         report_name,
+    )
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_company_stock(company: str):
+    stock_code = get_stock_code(company)
+    if not stock_code:
+        return pd.DataFrame(), "", ""
+
+    end = datetime.now(ZoneInfo("Asia/Seoul")).replace(tzinfo=None)
+    start = pd.Timestamp(end) - pd.DateOffset(years=3)
+    frame, symbol, source = get_company_stock_ohlc(
+        stock_code,
+        pd.Timestamp(start),
+        pd.Timestamp(end),
+    )
+    return frame, symbol, stock_code, source
+
+
+def stock_candlestick_chart(frame, company: str):
+    color = alt.condition(
+        "datum.종가 >= datum.시가",
+        alt.value("#E53935"),
+        alt.value("#1565C0"),
+    )
+    base = alt.Chart(frame).encode(
+        x=alt.X(
+            "날짜:T",
+            title="날짜",
+            axis=alt.Axis(
+                format="%Y-%m-%d",
+                labelAngle=-45,
+                tickCount=10,
+                grid=False,
+            ),
+        ),
+        color=color,
+        tooltip=[
+            alt.Tooltip("날짜:T", title="날짜", format="%Y-%m-%d"),
+            alt.Tooltip("시가:Q", title="시가", format=",.0f"),
+            alt.Tooltip("고가:Q", title="고가", format=",.0f"),
+            alt.Tooltip("저가:Q", title="저가", format=",.0f"),
+            alt.Tooltip("종가:Q", title="종가", format=",.0f"),
+        ],
+    )
+    wick = base.mark_rule(strokeWidth=2).encode(
+        y=alt.Y(
+            "저가:Q",
+            title=f"{company} 주가 (원)",
+            scale=alt.Scale(zero=False),
+        ),
+        y2="고가:Q",
+    )
+    body = base.mark_bar(
+        size=8,
+        opacity=0.95,
+        stroke="#FFFFFF",
+        strokeWidth=0.5,
+    ).encode(y="시가:Q", y2="종가:Q")
+    return (wick + body).properties(height=500).interactive(bind_y=False)
+
+
+def render_company_stock_chart(company: str) -> None:
+    st.subheader("주가 추이")
+    try:
+        frame, symbol, stock_code, source = load_company_stock(company)
+    except Exception as error:
+        st.warning(f"주가 데이터를 불러오지 못했습니다: {error}")
+        return
+    if frame.empty:
+        st.info("상장 종목코드를 찾지 못했거나 조회 가능한 주가가 없습니다.")
+        return
+
+    range_options = {
+        "1개월": 1,
+        "3개월": 3,
+        "6개월": 6,
+        "1년": 12,
+        "3년": 36,
+    }
+    selected_range = st.pills(
+        "주가 표시 기간",
+        tuple(range_options),
+        default="1년",
+        selection_mode="single",
+        key="company_stock_range",
+    )
+    cutoff = frame["날짜"].max() - pd.DateOffset(
+        months=range_options.get(selected_range or "1년")
+    )
+    display_frame = frame[frame["날짜"] >= cutoff].reset_index(drop=True)
+    latest = display_frame.iloc[-1]
+    previous_close = (
+        float(display_frame.iloc[-2]["종가"])
+        if len(display_frame) > 1
+        else float(latest["종가"])
+    )
+
+    metric_columns = st.columns(4)
+    metric_columns[0].metric(
+        "종가",
+        f"{float(latest['종가']):,.0f}원",
+        f"{float(latest['종가']) - previous_close:+,.0f}원",
+    )
+    for column, label in zip(metric_columns[1:], ("시가", "고가", "저가")):
+        column.metric(label, f"{float(latest[label]):,.0f}원")
+
+    st.caption(
+        f"최신 일봉 · 기준 시점: {latest['날짜']:%Y-%m-%d} · "
+        f"종목코드: {stock_code} · 심볼: {symbol} · "
+        f"출처: {source} · 장중 데이터는 변동될 수 있습니다."
+    )
+    st.altair_chart(
+        stock_candlestick_chart(display_frame, company),
+        width="stretch",
     )
 
 
@@ -113,6 +235,9 @@ else:
             f"출처: 금융감독원 Open DART · 연결재무제표(CFS) · "
             f"표시 단위: {amount_unit}"
         )
+
+        render_company_stock_chart(result["company"])
+        st.divider()
 
         full_pivot = make_pivot_table(financial_df, amount_unit)
         st.dataframe(

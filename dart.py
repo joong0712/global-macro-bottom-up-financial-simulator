@@ -92,6 +92,35 @@ def get_report_items(report_name: str) -> Iterable[tuple[str, dict[str, str]]]:
     return [(report_name, REPORT_CODES[report_name])]
 
 
+def get_stock_code(
+    company: str,
+    *,
+    api_key: str | None = None,
+) -> str | None:
+    """DART 기업명에 대응하는 6자리 상장 종목코드를 반환한다."""
+    company = company.strip()
+    if not company:
+        return None
+
+    corp_codes = get_dart_client(api_key).corp_codes
+    matches = corp_codes[
+        corp_codes["corp_name"].astype(str).str.strip().eq(company)
+    ]
+    if matches.empty and company.isdigit():
+        matches = corp_codes[
+            corp_codes["stock_code"].astype(str).str.zfill(6).eq(
+                company.zfill(6)
+            )
+        ]
+    if matches.empty:
+        return None
+
+    stock_code = str(matches.iloc[0]["stock_code"]).strip()
+    if not stock_code or stock_code.lower() == "nan":
+        return None
+    return stock_code.zfill(6)
+
+
 def fetch_financial_statements(
     company: str,
     start_year: int,

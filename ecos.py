@@ -42,11 +42,19 @@ def _m2_to_trillion_won(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def _policy_rate_changes(frame: pd.DataFrame) -> pd.DataFrame:
+    """일별 기준금리에서 실제 금리 변경 시점만 남긴다."""
+    result = frame.copy()
+    changed = result["값"].ne(result["값"].shift())
+    return result.loc[changed].reset_index(drop=True)
+
+
 INDICATORS = {
     "기준금리": IndicatorSpec(
-        "722Y001", "0101000", "M", "%",
+        "722Y001", "0101000", "D", "%",
         "한국은행 기준금리",
         "직전 발표값 대비", "%p",
+        transform=_policy_rate_changes,
     ),
     "원/달러 환율": IndicatorSpec(
         "731Y004", "0000001/0000100", "M", "원",
@@ -109,6 +117,48 @@ SUPPLEMENTARY_INDICATORS = (
     "실업률",
 )
 
+ECOS_MARKET_INDICES = {
+    "코스피": ("802Y001", "0001000"),
+    "코스닥": ("802Y001", "0089000"),
+}
+
+EXCHANGE_CURRENCIES = {
+    "원/달러": {
+        "chart_type": "candlestick",
+        "stat_code": "731Y003",
+        "items": {
+            "시가": "0000002",
+            "고가": "0000005",
+            "저가": "0000004",
+            "종가": "0000003",
+        },
+        "description": "원/달러 일별 시가·고가·저가·15:30 종가",
+    },
+    "원/위안": {
+        "chart_type": "candlestick",
+        "stat_code": "731Y003",
+        "items": {
+            "시가": "0000007",
+            "고가": "0000008",
+            "저가": "0000009",
+            "종가": "0000010",
+        },
+        "description": "원/위안 일별 시가·고가·저가·종가",
+    },
+    "원/100엔": {
+        "chart_type": "line",
+        "stat_code": "731Y001",
+        "items": {"환율": "0000002"},
+        "description": "원/일본엔(100엔) 일별 매매기준율",
+    },
+    "원/유로": {
+        "chart_type": "line",
+        "stat_code": "731Y001",
+        "items": {"환율": "0000003"},
+        "description": "원/유로 일별 환율",
+    },
+}
+
 
 def _get_api_key(api_key: str | None = None) -> str:
     key = api_key or os.getenv("ECOS_API_KEY")
@@ -131,7 +181,10 @@ def _api_period(month: str, cycle: str, *, is_end: bool) -> str:
         quarter = (int(month[4:]) - 1) // 3 + 1
         return f"{month[:4]}Q{quarter}"
     if cycle == "D":
-        return f"{month}{'31' if is_end else '01'}"
+        timestamp = pd.to_datetime(month, format="%Y%m")
+        if is_end:
+            timestamp += pd.offsets.MonthEnd(0)
+        return timestamp.strftime("%Y%m%d")
     return month
 
 
@@ -145,6 +198,142 @@ def _parse_time(value: str, cycle: str) -> pd.Timestamp:
 
     time_format = "%Y%m%d" if cycle == "D" else "%Y%m"
     return pd.to_datetime(value, format=time_format, errors="coerce")
+
+
+def _get_statistic_rows(
+    *,
+    stat_code: str,
+    cycle: str,
+    start_period: str,
+    end_period: str,
+    item_code: str,
+    api_key: str | None = None,
+    limit: int = 10_000,
+) -> list[dict]:
+    url = (
+        f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/{limit}/"
+        f"{stat_code}/{cycle}/{start_period}/{end_period}/{item_code}"
+    )
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+    result = response.json()
+
+    if "StatisticSearch" not in result:
+        message = result.get("RESULT", {}).get(
+            "MESSAGE",
+            "ECOS API 응답 형식을 확인할 수 없습니다.",
+        )
+        raise RuntimeError(message)
+    return result["StatisticSearch"].get("row", [])
+
+
+def get_exchange_chart_data(
+    currency: str,
+    start_date: str,
+    end_date: str,
+    *,
+    api_key: str | None = None,
+) -> tuple[str, pd.DataFrame, str]:
+    """통화별 일별 환율 차트 데이터를 반환한다.
+
+    ECOS가 OHLC를 제공하는 달러·위안은 candlestick, 엔·유로는 line이다.
+    """
+    if currency not in EXCHANGE_CURRENCIES:
+        raise ValueError(f"지원하지 않는 환율입니다: {currency}")
+
+    _validate_month(start_date, "조회 시작 월")
+    _validate_month(end_date, "조회 종료 월")
+    if start_date > end_date:
+        raise ValueError("조회 시작 월은 종료 월보다 늦을 수 없습니다.")
+
+    start_timestamp = pd.to_datetime(start_date, format="%Y%m")
+    end_timestamp = (
+        pd.to_datetime(end_date, format="%Y%m") + pd.offsets.MonthEnd(0)
+    )
+    config = EXCHANGE_CURRENCIES[currency]
+    series_frames: list[pd.DataFrame] = []
+
+    for column_name, item_code in config["items"].items():
+        rows = _get_statistic_rows(
+            stat_code=config["stat_code"],
+            cycle="D",
+            start_period=start_timestamp.strftime("%Y%m%d"),
+            end_period=end_timestamp.strftime("%Y%m%d"),
+            item_code=item_code,
+            api_key=api_key,
+        )
+        if not rows:
+            continue
+
+        frame = pd.DataFrame(rows)[["TIME", "DATA_VALUE"]].rename(
+            columns={"TIME": "날짜", "DATA_VALUE": column_name}
+        )
+        frame["날짜"] = pd.to_datetime(
+            frame["날짜"],
+            format="%Y%m%d",
+            errors="coerce",
+        )
+        frame[column_name] = pd.to_numeric(
+            frame[column_name],
+            errors="coerce",
+        )
+        series_frames.append(frame.dropna())
+
+    if not series_frames:
+        return (
+            config["chart_type"],
+            pd.DataFrame(columns=["날짜", *config["items"]]),
+            config["description"],
+        )
+
+    result = series_frames[0]
+    for frame in series_frames[1:]:
+        result = result.merge(frame, on="날짜", how="inner")
+
+    return (
+        config["chart_type"],
+        result.sort_values("날짜").reset_index(drop=True),
+        config["description"],
+    )
+
+
+def get_ecos_market_index(
+    name: str,
+    start_date: str,
+    end_date: str,
+    *,
+    api_key: str | None = None,
+) -> pd.DataFrame:
+    """ECOS의 코스피·코스닥 일별 지수를 반환한다."""
+    if name not in ECOS_MARKET_INDICES:
+        raise ValueError(f"지원하지 않는 시장지수입니다: {name}")
+
+    _validate_month(start_date, "조회 시작 월")
+    _validate_month(end_date, "조회 종료 월")
+    if start_date > end_date:
+        raise ValueError("조회 시작 월은 종료 월보다 늦을 수 없습니다.")
+
+    stat_code, item_code = ECOS_MARKET_INDICES[name]
+    rows = _get_statistic_rows(
+        stat_code=stat_code,
+        cycle="D",
+        start_period=_api_period(start_date, "D", is_end=False),
+        end_period=_api_period(end_date, "D", is_end=True),
+        item_code=item_code,
+        api_key=api_key,
+        limit=10_000,
+    )
+    if not rows:
+        return pd.DataFrame(columns=["날짜", "값"])
+
+    frame = pd.DataFrame(rows)[["TIME", "DATA_VALUE"]].rename(
+        columns={"TIME": "날짜", "DATA_VALUE": "값"}
+    )
+    frame["날짜"] = pd.to_datetime(
+        frame["날짜"], format="%Y%m%d", errors="coerce"
+    )
+    frame["값"] = pd.to_numeric(frame["값"], errors="coerce")
+    return frame.dropna().sort_values("날짜").reset_index(drop=True)
 
 
 def get_indicator(
@@ -171,26 +360,39 @@ def get_indicator(
             pd.to_datetime(start_date, format="%Y%m") - pd.DateOffset(months=12)
         ).strftime("%Y%m")
 
-    url = (
-        f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/1000/"
-        f"{spec.stat_code}/{spec.cycle}/"
-        f"{_api_period(request_start, spec.cycle, is_end=False)}/"
-        f"{_api_period(end_date, spec.cycle, is_end=True)}/{spec.item_code}"
+    start_period = _api_period(
+        request_start,
+        spec.cycle,
+        is_end=False,
     )
+    end_period = _api_period(end_date, spec.cycle, is_end=True)
 
-    client = session or requests
-    response = client.get(url, timeout=15)
-    response.raise_for_status()
-    result = response.json()
-
-    if "StatisticSearch" not in result:
-        message = result.get("RESULT", {}).get(
-            "MESSAGE",
-            "ECOS API 응답 형식을 확인할 수 없습니다.",
+    if session is None:
+        rows = _get_statistic_rows(
+            stat_code=spec.stat_code,
+            cycle=spec.cycle,
+            start_period=start_period,
+            end_period=end_period,
+            item_code=spec.item_code,
+            api_key=api_key,
+            limit=10_000,
         )
-        raise RuntimeError(message)
-
-    rows = result["StatisticSearch"].get("row", [])
+    else:
+        url = (
+            f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/10000/"
+            f"{spec.stat_code}/{spec.cycle}/{start_period}/{end_period}/"
+            f"{spec.item_code}"
+        )
+        response = session.get(url, timeout=15)
+        response.raise_for_status()
+        result = response.json()
+        if "StatisticSearch" not in result:
+            message = result.get("RESULT", {}).get(
+                "MESSAGE",
+                "ECOS API 응답 형식을 확인할 수 없습니다.",
+            )
+            raise RuntimeError(message)
+        rows = result["StatisticSearch"].get("row", [])
     if not rows:
         return pd.DataFrame(columns=["날짜", "값"])
 

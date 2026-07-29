@@ -118,6 +118,11 @@ FRED_SUPPLEMENTARY_INDICATORS = (
     "실업률",
 )
 
+FRED_MARKET_INDICES = {
+    "S&P 500": "SP500",
+    "다우존스": "DJIA",
+}
+
 
 def _get_api_key(api_key: str | None = None) -> str:
     key = api_key or os.getenv("FRED_API_KEY")
@@ -179,6 +184,34 @@ def get_fred_indicator(
         frame = spec.transform(frame)
 
     return frame[frame["날짜"] >= start].reset_index(drop=True)
+
+
+def get_fred_market_index(
+    name: str,
+    start_date: str,
+    end_date: str,
+    *,
+    api_key: str | None = None,
+) -> pd.DataFrame:
+    """FRED의 미국 주가지수 일별 종가를 반환한다."""
+    if name not in FRED_MARKET_INDICES:
+        raise ValueError(f"지원하지 않는 시장지수입니다: {name}")
+
+    start = _parse_month(start_date, "조회 시작 월")
+    end = _parse_month(end_date, "조회 종료 월") + pd.offsets.MonthEnd(0)
+    series = Fred(api_key=_get_api_key(api_key)).get_series(
+        FRED_MARKET_INDICES[name],
+        observation_start=start.strftime("%Y-%m-%d"),
+        observation_end=end.strftime("%Y-%m-%d"),
+    )
+    return (
+        series.rename("값")
+        .rename_axis("날짜")
+        .reset_index()
+        .dropna()
+        .sort_values("날짜")
+        .reset_index(drop=True)
+    )
 
 
 def get_fred_indicators(
