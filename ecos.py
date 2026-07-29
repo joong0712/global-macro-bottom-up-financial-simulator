@@ -2,6 +2,7 @@
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Callable
 
@@ -232,7 +233,7 @@ def _request_ecos_json(
 ) -> dict:
     """인증키가 포함된 요청 URL을 노출하지 않고 ECOS를 호출한다."""
     try:
-        response = client.get(url, timeout=(10, 30))
+        response = client.get(url, timeout=(5, 20))
         response.raise_for_status()
         return response.json()
     except requests.Timeout as error:
@@ -458,16 +459,29 @@ def get_macro_indicators(
     data: dict[str, pd.DataFrame] = {}
     errors: dict[str, str] = {}
 
-    with _build_ecos_session() as session:
-        for name in names:
+    def fetch(name: str) -> tuple[str, pd.DataFrame]:
+        # requests.Session은 스레드 간 공유하지 않고 지표별로 생성한다.
+        with _build_ecos_session() as session:
+            frame = get_indicator(
+                name,
+                start_date,
+                end_date,
+                api_key=api_key,
+                session=session,
+            )
+        return name, frame
+
+    worker_count = min(6, len(names))
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = {
+            executor.submit(fetch, name): name
+            for name in names
+        }
+        for future in as_completed(futures):
+            name = futures[future]
             try:
-                data[name] = get_indicator(
-                    name,
-                    start_date,
-                    end_date,
-                    api_key=api_key,
-                    session=session,
-                )
+                result_name, frame = future.result()
+                data[result_name] = frame
             except Exception as error:
                 errors[name] = str(error)
 

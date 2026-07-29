@@ -33,7 +33,7 @@ st.set_page_config(
 )
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def load_ecos_indicators(
     start_date: str,
     end_date: str,
