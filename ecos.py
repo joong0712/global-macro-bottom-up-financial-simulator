@@ -8,6 +8,8 @@ from typing import Callable
 import pandas as pd
 import requests
 from dotenv import load_dotenv
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 load_dotenv()
@@ -200,6 +202,51 @@ def _parse_time(value: str, cycle: str) -> pd.Timestamp:
     return pd.to_datetime(value, format=time_format, errors="coerce")
 
 
+def _row_limit(cycle: str, start_period: str, end_period: str) -> int:
+    """조회 주기와 기간에 맞는 최소 행 한도를 계산한다."""
+    if cycle != "D":
+        return 1_000
+    start = pd.to_datetime(start_period, format="%Y%m%d")
+    end = pd.to_datetime(end_period, format="%Y%m%d")
+    return min(max((end - start).days + 10, 100), 10_000)
+
+
+def _build_ecos_session() -> requests.Session:
+    session = requests.Session()
+    retry = Retry(
+        total=2,
+        connect=2,
+        read=2,
+        status=2,
+        backoff_factor=0.7,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET"}),
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
+
+
+def _request_ecos_json(
+    client: requests.Session,
+    url: str,
+) -> dict:
+    """인증키가 포함된 요청 URL을 노출하지 않고 ECOS를 호출한다."""
+    try:
+        response = client.get(url, timeout=(10, 30))
+        response.raise_for_status()
+        return response.json()
+    except requests.Timeout as error:
+        raise RuntimeError(
+            "ECOS 서버 응답 시간이 초과됐습니다. 잠시 후 다시 시도해 주세요."
+        ) from error
+    except requests.RequestException as error:
+        raise RuntimeError(
+            "ECOS 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요."
+        ) from error
+    except ValueError as error:
+        raise RuntimeError("ECOS API 응답을 해석하지 못했습니다.") from error
+
+
 def _get_statistic_rows(
     *,
     stat_code: str,
@@ -208,15 +255,21 @@ def _get_statistic_rows(
     end_period: str,
     item_code: str,
     api_key: str | None = None,
-    limit: int = 10_000,
+    limit: int | None = None,
+    session: requests.Session | None = None,
 ) -> list[dict]:
+    row_limit = limit or _row_limit(cycle, start_period, end_period)
     url = (
-        f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/{limit}/"
+        f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/{row_limit}/"
         f"{stat_code}/{cycle}/{start_period}/{end_period}/{item_code}"
     )
-    response = requests.get(url, timeout=15)
-    response.raise_for_status()
-    result = response.json()
+    owns_session = session is None
+    client = session or _build_ecos_session()
+    try:
+        result = _request_ecos_json(client, url)
+    finally:
+        if owns_session:
+            client.close()
 
     if "StatisticSearch" not in result:
         message = result.get("RESULT", {}).get(
@@ -321,7 +374,6 @@ def get_ecos_market_index(
         end_period=_api_period(end_date, "D", is_end=True),
         item_code=item_code,
         api_key=api_key,
-        limit=10_000,
     )
     if not rows:
         return pd.DataFrame(columns=["날짜", "값"])
@@ -367,32 +419,15 @@ def get_indicator(
     )
     end_period = _api_period(end_date, spec.cycle, is_end=True)
 
-    if session is None:
-        rows = _get_statistic_rows(
-            stat_code=spec.stat_code,
-            cycle=spec.cycle,
-            start_period=start_period,
-            end_period=end_period,
-            item_code=spec.item_code,
-            api_key=api_key,
-            limit=10_000,
-        )
-    else:
-        url = (
-            f"{ECOS_API_URL}/{_get_api_key(api_key)}/json/kr/1/10000/"
-            f"{spec.stat_code}/{spec.cycle}/{start_period}/{end_period}/"
-            f"{spec.item_code}"
-        )
-        response = session.get(url, timeout=15)
-        response.raise_for_status()
-        result = response.json()
-        if "StatisticSearch" not in result:
-            message = result.get("RESULT", {}).get(
-                "MESSAGE",
-                "ECOS API 응답 형식을 확인할 수 없습니다.",
-            )
-            raise RuntimeError(message)
-        rows = result["StatisticSearch"].get("row", [])
+    rows = _get_statistic_rows(
+        stat_code=spec.stat_code,
+        cycle=spec.cycle,
+        start_period=start_period,
+        end_period=end_period,
+        item_code=spec.item_code,
+        api_key=api_key,
+        session=session,
+    )
     if not rows:
         return pd.DataFrame(columns=["날짜", "값"])
 
@@ -423,7 +458,7 @@ def get_macro_indicators(
     data: dict[str, pd.DataFrame] = {}
     errors: dict[str, str] = {}
 
-    with requests.Session() as session:
+    with _build_ecos_session() as session:
         for name in names:
             try:
                 data[name] = get_indicator(
