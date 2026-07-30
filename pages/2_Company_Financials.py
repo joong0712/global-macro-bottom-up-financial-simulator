@@ -16,6 +16,7 @@ from dart import (
     split_financial_statements,
 )
 from market_data import get_company_stock_ohlc
+from live_market import domestic_market_state, get_live_stock
 
 
 st.set_page_config(
@@ -23,7 +24,6 @@ st.set_page_config(
     page_icon="📑",
     layout="wide",
 )
-
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_financial_statements(
@@ -57,10 +57,12 @@ def load_company_stock(company: str):
 
 
 def stock_candlestick_chart(frame, company: str):
+    # 장기간을 표시할수록 캔들 폭을 자동으로 줄여 겹침을 방지한다.
+    candle_size = max(1.2, min(9.0, 720 / max(len(frame), 1)))
     color = alt.condition(
         "datum.종가 >= datum.시가",
-        alt.value("#E53935"),
-        alt.value("#1565C0"),
+        alt.value("#089981"),
+        alt.value("#F23645"),
     )
     base = alt.Chart(frame).encode(
         x=alt.X(
@@ -68,9 +70,9 @@ def stock_candlestick_chart(frame, company: str):
             title="날짜",
             axis=alt.Axis(
                 format="%Y-%m-%d",
-                labelAngle=-45,
+                labelAngle=0,
                 tickCount=10,
-                grid=False,
+                grid=True,
             ),
         ),
         color=color,
@@ -82,21 +84,123 @@ def stock_candlestick_chart(frame, company: str):
             alt.Tooltip("종가:Q", title="종가", format=",.0f"),
         ],
     )
-    wick = base.mark_rule(strokeWidth=2).encode(
+    wick = base.mark_rule(strokeWidth=1.2).encode(
         y=alt.Y(
             "저가:Q",
             title=f"{company} 주가 (원)",
             scale=alt.Scale(zero=False),
+            axis=alt.Axis(orient="right"),
         ),
         y2="고가:Q",
     )
     body = base.mark_bar(
-        size=8,
-        opacity=0.95,
-        stroke="#FFFFFF",
-        strokeWidth=0.5,
+        size=candle_size,
+        opacity=1,
     ).encode(y="시가:Q", y2="종가:Q")
-    return (wick + body).properties(height=500).interactive(bind_y=False)
+    latest_price = pd.DataFrame(
+        {"종가": [float(frame.iloc[-1]["종가"])]}
+    )
+    price_line = (
+        alt.Chart(latest_price)
+        .mark_rule(
+            color="#B2B5BE",
+            strokeWidth=1,
+            strokeDash=[4, 4],
+            opacity=0.75,
+        )
+        .encode(y="종가:Q")
+    )
+    return (
+        (wick + body + price_line)
+        .properties(height=500, background="#131722")
+        .configure_axis(
+            domainColor="#434651",
+            gridColor="#2A2E39",
+            gridOpacity=0.8,
+            labelColor="#B2B5BE",
+            labelFont="Arial",
+            labelFontSize=11,
+            tickColor="#434651",
+            titleColor="#D1D4DC",
+            titleFont="Arial",
+            titleFontSize=12,
+        )
+        .configure_view(stroke="#2A2E39", strokeWidth=1)
+        .interactive(bind_y=False)
+    )
+
+
+@st.fragment(run_every="1s")
+def render_live_stock_metrics(
+    stock_code: str,
+    fallback: dict,
+) -> None:
+    live, live_error = get_live_stock(stock_code)
+    state = domestic_market_state(
+        live.received_at if live is not None else None,
+        live_error,
+    )
+    metric_columns = st.columns(4)
+    if live is not None:
+        metric_columns[0].metric(
+            "실시간 현재가",
+            f"{live.price:,.0f}원",
+            f"{live.change:+,.0f}원 ({live.change_rate:+.2f}%)"
+            if live.change is not None and live.change_rate is not None
+            else None,
+        )
+        for column, label, value in zip(
+            metric_columns[1:],
+            ("시가", "고가", "저가"),
+            (live.open, live.high, live.low),
+        ):
+            column.metric(label, f"{value:,.0f}원" if value is not None else "-")
+        st.caption(
+            f"{'●' if state.is_live else '○'} {state.label} · "
+            f"{state.detail} · 종목코드: {stock_code}"
+        )
+    else:
+        metric_columns[0].metric(
+            "최근 종가",
+            f"{fallback['종가']:,.0f}원",
+            f"{fallback['종가'] - fallback['이전종가']:+,.0f}원",
+        )
+        for column, label in zip(metric_columns[1:], ("시가", "고가", "저가")):
+            column.metric(label, f"{fallback[label]:,.0f}원")
+        st.caption(f"○ {state.label} · {state.detail}")
+
+
+@st.fragment(run_every="30s")
+def render_live_stock_candlestick(
+    display_frame,
+    company: str,
+    stock_code: str,
+) -> None:
+    chart_frame = display_frame.copy()
+    live, _ = get_live_stock(stock_code)
+    if live is not None:
+        today = pd.Timestamp(live.received_at.date())
+        today_row = pd.DataFrame(
+            [{
+                "날짜": today,
+                "시가": live.open,
+                "고가": live.high,
+                "저가": live.low,
+                "종가": live.price,
+            }]
+        )
+        chart_frame = chart_frame[
+            pd.to_datetime(chart_frame["날짜"]).dt.normalize() != today
+        ]
+        chart_frame = (
+            pd.concat([chart_frame, today_row], ignore_index=True)
+            .sort_values("날짜")
+            .reset_index(drop=True)
+        )
+    st.altair_chart(
+        stock_candlestick_chart(chart_frame, company),
+        width="stretch",
+    )
 
 
 def render_company_stock_chart(company: str) -> None:
@@ -134,25 +238,18 @@ def render_company_stock_chart(company: str) -> None:
         if len(display_frame) > 1
         else float(latest["종가"])
     )
-
-    metric_columns = st.columns(4)
-    metric_columns[0].metric(
-        "종가",
-        f"{float(latest['종가']):,.0f}원",
-        f"{float(latest['종가']) - previous_close:+,.0f}원",
-    )
-    for column, label in zip(metric_columns[1:], ("시가", "고가", "저가")):
-        column.metric(label, f"{float(latest[label]):,.0f}원")
-
+    fallback = {
+        label: float(latest[label])
+        for label in ("시가", "고가", "저가", "종가")
+    }
+    fallback["이전종가"] = previous_close
+    render_live_stock_metrics(stock_code, fallback)
     st.caption(
         f"최신 일봉 · 기준 시점: {latest['날짜']:%Y-%m-%d} · "
         f"종목코드: {stock_code} · 심볼: {symbol} · "
         f"출처: {source} · 장중 데이터는 변동될 수 있습니다."
     )
-    st.altair_chart(
-        stock_candlestick_chart(display_frame, company),
-        width="stretch",
-    )
+    render_live_stock_candlestick(display_frame, company, stock_code)
 
 
 def dataframe_with_number_format(frame):

@@ -15,7 +15,7 @@ TWELVE_DATA_URL = "https://api.twelvedata.com/time_series"
 def get_live_usd_krw(
     *,
     interval: str = "1min",
-    outputsize: int = 720,
+    outputsize: int = 2000,
     api_key: str | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     """USD/KRW 최근 분봉 OHLC와 메타데이터를 반환한다."""
@@ -65,11 +65,9 @@ def get_live_usd_krw(
             "close": "종가",
         }
     )
-    frame["날짜"] = (
-        pd.to_datetime(frame["날짜"], errors="coerce", utc=True)
-        .dt.tz_convert("Asia/Seoul")
-        .dt.tz_localize(None)
-    )
+    # API 요청에 timezone=Asia/Seoul을 지정했으므로 datetime 응답은
+    # 이미 한국 시간이다. 이를 UTC로 다시 해석하면 9시간이 더해진다.
+    frame["날짜"] = pd.to_datetime(frame["날짜"], errors="coerce")
     for column in ("시가", "고가", "저가", "종가"):
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
 

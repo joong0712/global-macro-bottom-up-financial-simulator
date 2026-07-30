@@ -23,6 +23,12 @@ from fred import (
     get_fred_indicators,
 )
 from market_data import MARKET_INDICES, get_market_index_ohlc
+from live_market import (
+    domestic_market_state,
+    forex_market_state,
+    get_live_index,
+    get_live_usd_krw_ticks,
+)
 from twelve_data import get_live_usd_krw
 
 
@@ -31,7 +37,6 @@ st.set_page_config(
     page_icon="📈",
     layout="wide",
 )
-
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def load_ecos_indicators(
@@ -110,6 +115,81 @@ def source_description(spec: Any) -> str:
     return f"출처: Federal Reserve Bank of St. Louis FRED · Series: {spec.series_id}"
 
 
+@st.fragment(run_every="1m")
+def render_live_exchange_metric(spec: Any, fallback_frame) -> None:
+    """원/달러 실시간 카드와 ECOS 장애 대체값을 표시한다."""
+    try:
+        market_frame, _, ticks, stream_error = (
+            load_synchronized_usd_krw()
+        )
+    except Exception as error:
+        market_frame = pd.DataFrame()
+        stream_error = str(error)
+
+    if not market_frame.empty:
+        latest = market_frame.iloc[-1]
+        latest_time = pd.Timestamp(latest["날짜"])
+        previous_day = market_frame[
+            pd.to_datetime(market_frame["날짜"]).dt.date
+            < latest_time.date()
+        ]
+        comparison = (
+            float(previous_day.iloc[-1]["종가"])
+            if not previous_day.empty
+            else (
+                float(market_frame.iloc[-2]["종가"])
+                if len(market_frame) > 1
+                else float(latest["종가"])
+            )
+        )
+        current = float(latest["종가"])
+        delta = current - comparison
+        delta_rate = delta / comparison * 100 if comparison else 0.0
+        st.metric(
+            "원/달러 환율",
+            f"{current:,.2f}원",
+            f"{delta:+,.2f}원 ({delta_rate:+.2f}%)",
+            help="Twelve Data USD/KRW 실시간 시장 중간환율",
+        )
+        live_received = bool(ticks)
+        state = forex_market_state(
+            latest_time.to_pydatetime(),
+            has_live_tick=live_received,
+            error=stream_error,
+        )
+        st.caption(
+            f"{'●' if state.is_live else '○'} {state.label} · "
+            f"{state.detail} · 기준 {latest_time:%H:%M} KST · "
+            "1분마다 갱신"
+        )
+        if stream_error and not live_received:
+            st.caption("WebSocket 연결 중 · 최신 1분봉을 표시합니다.")
+        return
+
+    latest = fallback_frame.iloc[-1]
+    current_value = float(latest["값"])
+    previous_value = (
+        float(fallback_frame.iloc[-2]["값"])
+        if len(fallback_frame) > 1
+        else None
+    )
+    delta = (
+        format_delta(spec, current_value - previous_value)
+        if previous_value is not None
+        else None
+    )
+    st.metric(
+        "원/달러 환율",
+        format_value(spec, current_value),
+        delta,
+        help=spec.description,
+    )
+    st.caption(
+        f"한국은행 ECOS 공식환율 · "
+        f"{format_period(spec, latest['날짜'])} · 실시간 아님"
+    )
+
+
 def csv_bytes(frame) -> bytes:
     return frame.to_csv(index=False).encode("utf-8-sig")
 
@@ -185,6 +265,9 @@ def render_current_metrics(
                 else None
             )
             with column:
+                if source_name == "ECOS" and name == "원/달러 환율":
+                    render_live_exchange_metric(spec, frame)
+                    continue
                 st.metric(
                     label=name,
                     value=format_value(spec, current_value),
@@ -196,11 +279,20 @@ def render_current_metrics(
                 )
 
 
-def candlestick_chart(frame, currency: str, *, intraday: bool = False):
+def candlestick_chart(
+    frame,
+    name: str,
+    *,
+    unit: str = "포인트",
+    intraday: bool = False,
+):
+    # 고정 폭 캔들은 장기간/분봉 전체 보기에서 서로 겹친다.
+    # 표시 개수에 맞춰 폭을 줄여 축소 상태에서도 캔들을 구분한다.
+    candle_size = max(1.2, min(9.0, 720 / max(len(frame), 1)))
     color = alt.condition(
         "datum.종가 >= datum.시가",
-        alt.value("#E53935"),
-        alt.value("#1565C0"),
+        alt.value("#089981"),
+        alt.value("#F23645"),
     )
     base = alt.Chart(frame).encode(
         x=alt.X(
@@ -208,9 +300,9 @@ def candlestick_chart(frame, currency: str, *, intraday: bool = False):
             title="날짜",
             axis=alt.Axis(
                 format="%H:%M" if intraday else "%Y-%m-%d",
-                labelAngle=-45,
+                labelAngle=0,
                 tickCount=10,
-                grid=False,
+                grid=True,
             ),
         ),
         color=color,
@@ -226,35 +318,92 @@ def candlestick_chart(frame, currency: str, *, intraday: bool = False):
             alt.Tooltip("종가:Q", title="종가", format=",.2f"),
         ],
     )
-    wick = base.mark_rule(strokeWidth=2).encode(
+    wick = base.mark_rule(strokeWidth=1.2).encode(
         y=alt.Y(
             "저가:Q",
-            title=f"{currency} (원)",
+            title=f"{name} ({unit})",
             scale=alt.Scale(zero=False),
-            axis=alt.Axis(grid=True, gridOpacity=0.2),
+            axis=alt.Axis(orient="right"),
         ),
         y2="고가:Q",
     )
     body = base.mark_bar(
-        size=3 if intraday else 8,
-        opacity=0.95,
-        stroke="#FFFFFF",
-        strokeWidth=0.5,
+        size=candle_size,
+        opacity=1,
     ).encode(
         y="시가:Q",
         y2="종가:Q",
     )
+    latest_price = pd.DataFrame(
+        {"종가": [float(frame.iloc[-1]["종가"])]}
+    )
+    price_line = (
+        alt.Chart(latest_price)
+        .mark_rule(
+            color="#B2B5BE",
+            strokeWidth=1,
+            strokeDash=[4, 4],
+            opacity=0.75,
+        )
+        .encode(y="종가:Q")
+    )
     return (
-        (wick + body)
-        .properties(height=520)
-        .configure_view(strokeWidth=0)
+        (wick + body + price_line)
+        .properties(height=520, background="#131722")
+        .configure_axis(
+            domainColor="#434651",
+            gridColor="#2A2E39",
+            gridOpacity=0.8,
+            labelColor="#B2B5BE",
+            labelFont="Arial",
+            labelFontSize=11,
+            tickColor="#434651",
+            titleColor="#D1D4DC",
+            titleFont="Arial",
+            titleFontSize=12,
+        )
+        .configure_view(stroke="#2A2E39", strokeWidth=1)
         .interactive(bind_y=False)
     )
 
 
+def _merge_live_forex_candle(frame, ticks):
+    if not ticks:
+        return frame
+    result = frame.copy()
+    tick_frame = pd.DataFrame(ticks, columns=["날짜", "가격"])
+    tick_frame["분"] = pd.to_datetime(tick_frame["날짜"]).dt.floor("min")
+    live_candles = (
+        tick_frame.groupby("분")["가격"]
+        .agg(시가="first", 고가="max", 저가="min", 종가="last")
+        .reset_index()
+        .rename(columns={"분": "날짜"})
+    )
+    result = result[~result["날짜"].isin(live_candles["날짜"])]
+    return (
+        pd.concat([result, live_candles], ignore_index=True)
+        .sort_values("날짜")
+        .reset_index(drop=True)
+    )
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def load_synchronized_usd_krw():
+    """카드와 차트가 공유하는 동일한 1분 환율 스냅샷을 반환한다."""
+    frame, meta = load_live_usd_krw()
+    ticks, stream_error = get_live_usd_krw_ticks()
+    return (
+        _merge_live_forex_candle(frame, ticks),
+        meta,
+        ticks,
+        stream_error,
+    )
+
+
+@st.fragment(run_every="1m")
 def render_live_exchange_chart() -> None:
     try:
-        frame, meta = load_live_usd_krw()
+        frame, meta, ticks, stream_error = load_synchronized_usd_krw()
     except Exception as error:
         st.warning(
             "실시간 환율을 불러오지 못했습니다. "
@@ -298,48 +447,38 @@ def render_live_exchange_chart() -> None:
     for column, label in zip(metric_columns[1:], ("시가", "고가", "저가")):
         column.metric(label, f"{float(latest[label]):,.2f}원")
 
+    chart_state = forex_market_state(
+        pd.Timestamp(latest["날짜"]).to_pydatetime(),
+        has_live_tick=bool(ticks),
+        error=stream_error,
+    )
     st.caption(
-        f"실시간 시장 중간환율 · 1분봉 · 최종 시세: "
-        f"{latest['날짜']:%Y-%m-%d %H:%M} KST · "
+        f"{'●' if chart_state.is_live else '○'} {chart_state.label} · "
+        f"{chart_state.detail} · 진행 중인 1분봉 갱신 · "
+        f"최종 시세: {latest['날짜']:%Y-%m-%d %H:%M} KST · "
         f"출처: Twelve Data · 거래소/피드: {meta.get('exchange', 'Forex')}"
     )
+    if stream_error and not ticks:
+        st.caption(f"WebSocket 연결 중: {stream_error}")
     st.altair_chart(
-        candlestick_chart(display_frame, "원/달러", intraday=True),
+        candlestick_chart(
+            display_frame,
+            "원/달러",
+            unit="원",
+            intraday=True,
+        ),
         width="stretch",
     )
 
 
-@st.fragment
-def render_market_indices(
+def _render_market_index_content(
+    frame,
     source_name: str,
     form_key: str,
-    start_date: str,
-    end_date: str,
+    selected_name: str,
+    live=None,
+    live_error: str | None = None,
 ) -> None:
-    names = (
-        tuple(MARKET_INDICES[source_name])
-    )
-    selected_name = st.pills(
-        "시장지수 선택",
-        names,
-        default=names[0],
-        selection_mode="single",
-        key=f"{form_key}_market_index",
-    )
-    if selected_name is None:
-        return
-
-    try:
-        frame = load_market_index(
-            source_name, selected_name, start_date, end_date
-        )
-    except Exception as error:
-        st.warning(f"{selected_name} 조회 실패: {error}")
-        return
-    if frame.empty:
-        st.warning("선택 기간에 조회 가능한 시장지수 데이터가 없습니다.")
-        return
-
     range_options = {
         "1개월": 1,
         "3개월": 3,
@@ -355,10 +494,33 @@ def render_market_indices(
         key=f"{form_key}_{selected_name}_market_range",
     )
     months = range_options.get(selected_range or "6개월")
-    display_frame = frame
+    chart_frame = frame.copy()
+    if live is not None:
+        today = pd.Timestamp(live.received_at.date())
+        today_row = pd.DataFrame(
+            [{
+                "날짜": today,
+                "시가": live.open,
+                "고가": live.high,
+                "저가": live.low,
+                "종가": live.price,
+            }]
+        )
+        chart_frame = chart_frame[
+            pd.to_datetime(chart_frame["날짜"]).dt.normalize() != today
+        ]
+        chart_frame = (
+            pd.concat([chart_frame, today_row], ignore_index=True)
+            .sort_values("날짜")
+            .reset_index(drop=True)
+        )
+
+    display_frame = chart_frame
     if months is not None:
-        cutoff = frame["날짜"].max() - pd.DateOffset(months=months)
-        display_frame = frame[frame["날짜"] >= cutoff].reset_index(drop=True)
+        cutoff = chart_frame["날짜"].max() - pd.DateOffset(months=months)
+        display_frame = chart_frame[
+            chart_frame["날짜"] >= cutoff
+        ].reset_index(drop=True)
 
     latest = display_frame.iloc[-1]
     previous_close = (
@@ -366,18 +528,29 @@ def render_market_indices(
         if len(display_frame) > 1
         else float(latest["종가"])
     )
-    metric_columns = st.columns(4)
-    metric_columns[0].metric(
-        "종가",
-        f"{float(latest['종가']):,.2f}",
-        f"{float(latest['종가']) - previous_close:+,.2f}",
-    )
-    for column, label in zip(metric_columns[1:], ("시가", "고가", "저가")):
-        column.metric(label, f"{float(latest[label]):,.2f}")
+    if source_name == "ECOS":
+        index_code = {"코스피": "0001", "코스닥": "1001"}[selected_name]
+        fallback = {
+            label: float(latest[label])
+            for label in ("시가", "고가", "저가", "종가")
+        }
+        fallback["이전종가"] = previous_close
+        render_live_index_metrics(index_code, fallback)
+    else:
+        metric_columns = st.columns(4)
+        metric_columns[0].metric(
+            "종가",
+            f"{float(latest['종가']):,.2f}",
+            f"{float(latest['종가']) - previous_close:+,.2f}",
+        )
+        for column, label in zip(
+            metric_columns[1:], ("시가", "고가", "저가")
+        ):
+            column.metric(label, f"{float(latest[label]):,.2f}")
 
     symbol, index_name = MARKET_INDICES[source_name][selected_name]
     market_source = (
-        "네이버 금융 국내 지수 일봉"
+        "네이버 금융 일봉 + KIS 실시간 지수"
         if source_name == "ECOS"
         else "Yahoo Finance"
     )
@@ -388,6 +561,112 @@ def render_market_indices(
     st.altair_chart(
         candlestick_chart(display_frame, selected_name),
         width="stretch",
+    )
+
+
+@st.fragment(run_every="1s")
+def render_live_index_metrics(
+    index_code: str,
+    fallback: dict,
+) -> None:
+    live, live_error = get_live_index(index_code)
+    state = domestic_market_state(
+        live.received_at if live is not None else None,
+        live_error,
+    )
+    metric_columns = st.columns(4)
+    if live is not None:
+        metric_columns[0].metric(
+            "실시간 현재지수",
+            f"{live.price:,.2f}",
+            f"{live.change:+,.2f} ({live.change_rate:+.2f}%)",
+        )
+        for column, label, value in zip(
+            metric_columns[1:],
+            ("시가", "고가", "저가"),
+            (live.open, live.high, live.low),
+        ):
+            column.metric(label, f"{value:,.2f}")
+        st.caption(
+            f"{'●' if state.is_live else '○'} {state.label} · "
+            f"{state.detail}"
+        )
+    else:
+        metric_columns[0].metric(
+            "최근 종가",
+            f"{fallback['종가']:,.2f}",
+            f"{fallback['종가'] - fallback['이전종가']:+,.2f}",
+        )
+        for column, label in zip(
+            metric_columns[1:], ("시가", "고가", "저가")
+        ):
+            column.metric(label, f"{fallback[label]:,.2f}")
+        st.caption(f"○ {state.label} · {state.detail}")
+
+
+@st.fragment(run_every="30s")
+def render_live_domestic_index(
+    form_key: str,
+    selected_name: str,
+    start_date: str,
+    end_date: str,
+) -> None:
+    try:
+        frame = load_market_index(
+            "ECOS", selected_name, start_date, end_date
+        )
+    except Exception as error:
+        st.warning(f"{selected_name} 조회 실패: {error}")
+        return
+    if frame.empty:
+        st.warning("선택 기간에 조회 가능한 시장지수 데이터가 없습니다.")
+        return
+    index_code = {"코스피": "0001", "코스닥": "1001"}[selected_name]
+    live, live_error = get_live_index(index_code)
+    _render_market_index_content(
+        frame,
+        "ECOS",
+        form_key,
+        selected_name,
+        live,
+        live_error,
+    )
+
+
+@st.fragment
+def render_market_indices(
+    source_name: str,
+    form_key: str,
+    start_date: str,
+    end_date: str,
+) -> None:
+    names = tuple(MARKET_INDICES[source_name])
+    selected_name = st.pills(
+        "시장지수 선택",
+        names,
+        default=names[0],
+        selection_mode="single",
+        key=f"{form_key}_market_index",
+    )
+    if selected_name is None:
+        return
+    if source_name == "ECOS":
+        render_live_domestic_index(
+            form_key, selected_name, start_date, end_date
+        )
+        return
+    try:
+        frame = load_market_index(
+            source_name, selected_name, start_date, end_date
+        )
+    except Exception as error:
+        st.warning(f"{selected_name} 조회 실패: {error}")
+        return
+    if frame.empty:
+        st.warning("선택 기간에 조회 가능한 시장지수 데이터가 없습니다.")
+        return
+    _render_market_index_content(
+        frame, source_name, form_key, selected_name
     )
 
 
@@ -497,7 +776,7 @@ def render_detail_chart(
                 unsafe_allow_html=True,
             )
             st.altair_chart(
-                candlestick_chart(display_frame, currency),
+                candlestick_chart(display_frame, currency, unit="원"),
                 width="stretch",
             )
         else:

@@ -3,6 +3,7 @@ altair==6.2.2
 yfinance==1.5.2
 pandas==2.3.3
 requests==2.34.2
+websocket-client==1.9.0
 python-dotenv==1.2.2
 OpenDartReader==0.2.2
 fredapi==0.5.2
