@@ -1,6 +1,7 @@
 """Open DART 재무제표 조회와 데이터 가공 기능."""
 
 import os
+import re
 from collections.abc import Iterable
 
 import OpenDartReader
@@ -73,6 +74,299 @@ AMOUNT_UNITS = {
     "백만원": 1_000_000,
     "억원": 100_000_000,
     "조원": 1_000_000_000_000,
+}
+
+
+KEY_FINANCIAL_ACCOUNT_SPECS = {
+    "손익계산서": (
+        {
+            "label": "수익(매출액)",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_Revenue",
+                        "ifrs-full_RevenueFromContractsWithCustomers",
+                        "dart_OperatingRevenue",
+                    ),
+                    "names": ("수익(매출액)", "매출액", "영업수익", "수익"),
+                },
+            ),
+        },
+        {
+            "label": "매출원가",
+            "components": (
+                {
+                    "ids": ("ifrs-full_CostOfSales",),
+                    "names": ("매출원가", "영업비용"),
+                },
+            ),
+        },
+        {
+            "label": "판매비와관리비",
+            "components": (
+                {
+                    "ids": (
+                        "dart_TotalSellingGeneralAdministrativeExpenses",
+                    ),
+                    "names": (
+                        "판매비와관리비",
+                        "판매비 및 관리비",
+                        "판매관리비",
+                        "판관비",
+                    ),
+                },
+            ),
+        },
+        {
+            "label": "영업이익",
+            "components": (
+                {
+                    "ids": (
+                        "dart_OperatingIncomeLoss",
+                        "ifrs-full_OperatingIncomeLoss",
+                        "ifrs-full_ProfitLossFromOperatingActivities",
+                    ),
+                    "names": ("영업이익", "영업이익(손실)", "영업손익"),
+                },
+            ),
+        },
+        {
+            "label": "법인세비용",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_IncomeTaxExpenseContinuingOperations",
+                        "ifrs-full_IncomeTaxExpense",
+                    ),
+                    "names": (
+                        "법인세비용",
+                        "법인세비용(수익)",
+                        "법인세비용(효익)",
+                    ),
+                },
+            ),
+        },
+        {
+            "label": "지배기업 소유주지분 순이익",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_ProfitLossAttributableToOwnersOfParent",
+                    ),
+                    "names": (
+                        "지배기업 소유주지분 순이익",
+                        "지배기업 소유주에게 귀속되는 당기순이익",
+                        "지배기업의 소유주에게 귀속되는 당기순이익",
+                        "지배기업 소유지분",
+                        "지배기업 소유주지분",
+                    ),
+                },
+            ),
+        },
+    ),
+    "재무상태표": (
+        {
+            "label": "매출채권",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_CurrentTradeReceivables",
+                        "ifrs-full_TradeAndOtherCurrentReceivables",
+                        "dart_ShortTermTradeReceivable",
+                    ),
+                    "names": ("매출채권", "매출채권 및 기타채권"),
+                },
+            ),
+        },
+        {
+            "label": "재고자산",
+            "components": (
+                {
+                    "ids": ("ifrs-full_Inventories",),
+                    "names": ("재고자산",),
+                },
+            ),
+        },
+        {
+            "label": "매입채무",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_TradeAndOtherCurrentPayablesToTradeSuppliers",
+                        "ifrs-full_TradeAndOtherCurrentPayables",
+                        "dart_ShortTermTradePayables",
+                    ),
+                    "names": ("매입채무", "매입채무 및 기타채무"),
+                },
+            ),
+        },
+        {
+            "label": "유형자산",
+            "components": (
+                {
+                    "ids": ("ifrs-full_PropertyPlantAndEquipment",),
+                    "names": ("유형자산",),
+                },
+            ),
+        },
+        {
+            "label": "현금및현금성자산",
+            "components": (
+                {
+                    "ids": ("ifrs-full_CashAndCashEquivalents",),
+                    "names": ("현금및현금성자산",),
+                },
+            ),
+        },
+        {
+            "label": "단기금융상품",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_ShorttermDepositsNotClassifiedAsCashEquivalents",
+                        "dart_ShortTermFinancialInstruments",
+                    ),
+                    "names": ("단기금융상품",),
+                },
+            ),
+        },
+        {
+            "label": "단기차입금 + 장기차입금 + 사채",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_CurrentBorrowings",
+                        "ifrs-full_ShorttermBorrowings",
+                        "dart_ShortTermBorrowings",
+                    ),
+                    "names": ("단기차입금",),
+                },
+                {
+                    "ids": (
+                        "ifrs-full_NoncurrentPortionOfNoncurrentLoansReceived",
+                        "ifrs-full_LongtermBorrowings",
+                        "dart_LongTermBorrowingsGross",
+                    ),
+                    "names": ("장기차입금",),
+                },
+                {
+                    "ids": (
+                        "ifrs-full_NoncurrentPortionOfNoncurrentBondsIssued",
+                        "ifrs-full_BondsIssued",
+                        "dart_BondsIssued",
+                    ),
+                    "names": ("사채",),
+                },
+            ),
+        },
+        {
+            "label": "지배기업 소유주지분",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_EquityAttributableToOwnersOfParent",
+                    ),
+                    "names": (
+                        "지배기업 소유주지분",
+                        "지배기업의 소유주에게 귀속되는 자본",
+                        "지배기업 소유지분",
+                    ),
+                },
+            ),
+        },
+    ),
+    "현금흐름표": (
+        {
+            "label": "영업활동 현금흐름",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_CashFlowsFromUsedInOperatingActivities",
+                    ),
+                    "names": (
+                        "영업활동 현금흐름",
+                        "영업활동현금흐름",
+                        "영업활동으로 인한 현금흐름",
+                    ),
+                },
+            ),
+        },
+        {
+            "label": "감가상각비 (D&A)",
+            "prefer_total": True,
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_DepreciationAndAmortisationExpense",
+                        "dart_AdjustmentsForDepreciationAndAmortisationExpense",
+                    ),
+                    "names": (
+                        "감가상각비 및 무형자산상각비",
+                        "감가상각비와 무형자산상각비",
+                        "감가상각비 및 상각비",
+                    ),
+                },
+                {
+                    "ids": (
+                        "ifrs-full_DepreciationExpense",
+                        "dart_AdjustmentsForDepreciationExpense",
+                    ),
+                    "names": (
+                        "감가상각비",
+                        "유형자산 감가상각비",
+                        "감가상각비(유형자산)",
+                    ),
+                },
+                {
+                    "ids": (
+                        "ifrs-full_AmortisationExpense",
+                        "dart_AdjustmentsForAmortizationExpense",
+                    ),
+                    "names": ("무형자산상각비", "무형자산 상각비"),
+                },
+            ),
+        },
+        {
+            "label": "유형자산의 취득 (CapEx)",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+                        "ifrs-full_PurchaseOfPropertyPlantAndEquipment",
+                    ),
+                    "names": ("유형자산의 취득", "유형자산 취득"),
+                },
+            ),
+        },
+        {
+            "label": "배당금 지급",
+            "components": (
+                {
+                    "ids": (
+                        "ifrs-full_DividendsPaidClassifiedAsFinancingActivities",
+                        "ifrs-full_DividendsPaid",
+                    ),
+                    "names": ("배당금 지급", "배당금의 지급", "배당금지급"),
+                },
+            ),
+        },
+        {
+            "label": "기말 현금및현금성자산",
+            "components": (
+                {
+                    "ids": (
+                        "dart_CashAndCashEquivalentsAtEndOfPeriodCf",
+                        "ifrs-full_CashAndCashEquivalentsCashFlowStatement",
+                    ),
+                    "names": (
+                        "기말 현금및현금성자산",
+                        "기말현금및현금성자산",
+                        "기말의 현금및현금성자산",
+                    ),
+                },
+            ),
+        },
+    ),
 }
 
 
@@ -208,6 +502,161 @@ def make_pivot_table(
         )
         .reset_index()
     )
+
+
+def _normalize_account_text(value: object) -> str:
+    """계정명 비교를 위해 공백과 구두점을 제거한다."""
+    text = "" if value is None or pd.isna(value) else str(value)
+    return re.sub(
+        r"[^0-9A-Za-z가-힣]",
+        "",
+        text,
+    ).lower()
+
+
+def _period_sort_key(period: object) -> tuple[int, int, str]:
+    text = str(period)
+    matched = re.fullmatch(r"(\d{2,4})/([1-4])Q", text)
+    if not matched:
+        return (9999, 9, text)
+    year = int(matched.group(1))
+    if year < 100:
+        year += 2000
+    return (year, int(matched.group(2)), text)
+
+
+def _extract_key_component(
+    statement_df: pd.DataFrame,
+    component: dict[str, tuple[str, ...]],
+) -> pd.Series:
+    """한 표준 계정 후보에서 기간별 최우선 공시값을 선택한다."""
+    if statement_df.empty:
+        return pd.Series(dtype="float64")
+
+    source = statement_df.copy()
+    source["_계정ID"] = source["계정ID"].astype(str).str.lower()
+    source["_계정명"] = source["계정명"].map(_normalize_account_text)
+    source["_금액"] = parse_amounts(source["당기금액"])
+    source["_우선순위"] = 10_000
+
+    matched = pd.Series(False, index=source.index)
+    for priority, account_id in enumerate(component.get("ids", ())):
+        current = source["_계정ID"].eq(account_id.lower())
+        source.loc[current, "_우선순위"] = priority
+        matched |= current
+
+    name_offset = 1_000
+    for priority, account_name in enumerate(component.get("names", ())):
+        current = source["_계정명"].eq(
+            _normalize_account_text(account_name)
+        )
+        update = current & source["_우선순위"].eq(10_000)
+        source.loc[update, "_우선순위"] = name_offset + priority
+        matched |= current
+
+    matched_source = source.loc[matched].dropna(subset=["_금액"])
+    if matched_source.empty:
+        return pd.Series(dtype="float64")
+
+    if "표시순서" in matched_source:
+        matched_source["_표시순서"] = pd.to_numeric(
+            matched_source["표시순서"], errors="coerce"
+        ).fillna(999_999)
+    else:
+        matched_source["_표시순서"] = 999_999
+
+    return (
+        matched_source.sort_values(
+            ["기간", "_우선순위", "_표시순서"]
+        )
+        .drop_duplicates("기간", keep="first")
+        .set_index("기간")["_금액"]
+        .astype(float)
+    )
+
+
+def make_key_financial_statement_tables(
+    df: pd.DataFrame,
+    amount_unit: str = "억원",
+) -> dict[str, pd.DataFrame]:
+    """가치평가에 필요한 19개 핵심 계정만 3대 재무제표로 반환한다.
+
+    기업마다 다른 계정명은 표준 계정 ID와 별칭으로 맞춘다. Gross Debt는
+    단기차입금·장기차입금·사채를 합산하며, D&A는 합계 계정을 우선 사용하고
+    합계가 없을 때 감가상각비와 무형자산상각비를 더한다. 원문에 없는 계정도
+    행은 유지하고 값은 결측치로 남겨 임의 대체를 방지한다.
+    """
+    if amount_unit not in AMOUNT_UNITS:
+        raise ValueError(f"지원하지 않는 금액 단위입니다: {amount_unit}")
+
+    empty_result = {
+        statement_name: pd.DataFrame(
+            columns=["재무제표", "계정명"]
+        )
+        for statement_name in KEY_FINANCIAL_ACCOUNT_SPECS
+    }
+    if df.empty:
+        return empty_result
+
+    periods = sorted(
+        df["기간"].dropna().astype(str).unique(),
+        key=_period_sort_key,
+    )
+    statement_names = {
+        "손익계산서": ("손익계산서", "포괄손익계산서"),
+        "재무상태표": ("재무상태표",),
+        "현금흐름표": ("현금흐름표",),
+    }
+    tables: dict[str, pd.DataFrame] = {}
+
+    for statement_name, account_specs in KEY_FINANCIAL_ACCOUNT_SPECS.items():
+        statement_df = df[
+            df["재무제표"].isin(statement_names[statement_name])
+        ]
+        rows: list[dict[str, object]] = []
+
+        for account_spec in account_specs:
+            components = [
+                _extract_key_component(statement_df, component)
+                for component in account_spec["components"]
+            ]
+            if account_spec.get("prefer_total"):
+                total = components[0]
+                parts = (
+                    pd.concat(components[1:], axis=1).sum(
+                        axis=1, min_count=1
+                    )
+                    if len(components) > 1
+                    else pd.Series(dtype="float64")
+                )
+                values = total.combine_first(parts)
+            elif len(components) == 1:
+                values = components[0]
+            else:
+                values = pd.concat(components, axis=1).sum(
+                    axis=1,
+                    min_count=1,
+                )
+
+            row: dict[str, object] = {
+                "재무제표": statement_name,
+                "계정명": account_spec["label"],
+            }
+            for period in periods:
+                value = values.get(period, pd.NA)
+                row[period] = (
+                    float(value) / AMOUNT_UNITS[amount_unit]
+                    if pd.notna(value)
+                    else pd.NA
+                )
+            rows.append(row)
+
+        tables[statement_name] = pd.DataFrame(
+            rows,
+            columns=["재무제표", "계정명", *periods],
+        )
+
+    return tables
 
 
 def split_financial_statements(

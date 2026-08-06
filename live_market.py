@@ -8,9 +8,10 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import requests
 import websocket
 from dotenv import load_dotenv
@@ -19,6 +20,216 @@ from dotenv import load_dotenv
 load_dotenv()
 
 KST = ZoneInfo("Asia/Seoul")
+KIS_INTRADAY_URL = (
+    "/uapi/domestic-stock/v1/quotations/"
+    "inquire-time-itemchartprice"
+)
+KIS_CURRENT_PRICE_URL = (
+    "/uapi/domestic-stock/v1/quotations/inquire-price"
+)
+_KIS_REST_LOCK = threading.Lock()
+_KIS_REST_TOKEN: str | None = None
+_KIS_REST_TOKEN_EXPIRES_AT: datetime | None = None
+
+
+def _kis_credentials() -> tuple[str, str]:
+    app_key = os.getenv("KIS_APP_KEY") or os.getenv("APP_KEY")
+    app_secret = os.getenv("KIS_APP_SECRET") or os.getenv("APP_SECRET")
+    if not app_key or not app_secret:
+        raise ValueError("KIS_APP_KEY와 KIS_APP_SECRET을 설정해 주세요.")
+    return app_key, app_secret
+
+
+def _kis_rest_base_url() -> str:
+    environment = os.getenv("KIS_ENV", "prod").strip().lower()
+    if environment in {"demo", "vps", "virtual", "mock"}:
+        return "https://openapivts.koreainvestment.com:29443"
+    return "https://openapi.koreainvestment.com:9443"
+
+
+def _kis_rest_access_token() -> str:
+    """프로세스 안에서 재사용하는 KIS REST 접근토큰을 반환한다."""
+    global _KIS_REST_TOKEN, _KIS_REST_TOKEN_EXPIRES_AT
+    now = datetime.now(KST)
+    with _KIS_REST_LOCK:
+        if (
+            _KIS_REST_TOKEN
+            and _KIS_REST_TOKEN_EXPIRES_AT
+            and now < _KIS_REST_TOKEN_EXPIRES_AT - timedelta(minutes=1)
+        ):
+            return _KIS_REST_TOKEN
+
+        app_key, app_secret = _kis_credentials()
+        response = requests.post(
+            f"{_kis_rest_base_url()}/oauth2/tokenP",
+            headers={"content-type": "application/json"},
+            json={
+                "grant_type": "client_credentials",
+                "appkey": app_key,
+                "appsecret": app_secret,
+            },
+            timeout=15,
+        )
+        response.raise_for_status()
+        result = response.json()
+        token = result.get("access_token")
+        if not token:
+            raise RuntimeError(
+                result.get("error_description", "KIS 접근토큰 발급 실패")
+            )
+        expires_in = int(result.get("expires_in", 86_400))
+        _KIS_REST_TOKEN = token
+        _KIS_REST_TOKEN_EXPIRES_AT = now + timedelta(seconds=expires_in)
+        return token
+
+
+def _request_kis_intraday_page(
+    stock_code: str,
+    input_time: str,
+) -> list[dict]:
+    app_key, app_secret = _kis_credentials()
+    response = requests.get(
+        f"{_kis_rest_base_url()}{KIS_INTRADAY_URL}",
+        headers={
+            "authorization": f"Bearer {_kis_rest_access_token()}",
+            "appkey": app_key,
+            "appsecret": app_secret,
+            "tr_id": "FHKST03010200",
+            "custtype": "P",
+        },
+        params={
+            "FID_COND_MRKT_DIV_CODE": "J",
+            "FID_INPUT_ISCD": stock_code,
+            "FID_INPUT_HOUR_1": input_time,
+            "FID_PW_DATA_INCU_YN": "Y",
+            "FID_ETC_CLS_CODE": "",
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    result = response.json()
+    if str(result.get("rt_cd", "0")) != "0":
+        raise RuntimeError(result.get("msg1", "KIS 당일 분봉 조회 실패"))
+    return result.get("output2") or []
+
+
+def get_kis_intraday_stock_ohlc(stock_code: str) -> pd.DataFrame:
+    """KIS에서 최근 영업일의 당일 1분 OHLC를 시간순으로 반환한다.
+
+    공식 API가 한 번에 최대 30건만 반환하므로 가장 최근 시점부터
+    09:00까지 역방향으로 이어서 조회한다. 전일 분봉은 제공되지 않는다.
+    """
+    stock_code = stock_code.strip()
+    if not stock_code:
+        raise ValueError("종목코드가 필요합니다.")
+
+    rows: list[dict] = []
+    input_time = "160000"
+    previous_oldest: str | None = None
+    is_demo = _kis_rest_base_url().startswith("https://openapivts")
+
+    # 09:00~16:00은 양 끝을 포함하면 최대 421개 분 시점이므로
+    # 페이지당 30건 기준 최대 15페이지가 필요하다.
+    for _ in range(15):
+        page = _request_kis_intraday_page(stock_code, input_time)
+        if not page:
+            break
+        rows.extend(page)
+        times = sorted(
+            str(row.get("stck_cntg_hour", ""))
+            for row in page
+            if str(row.get("stck_cntg_hour", "")).isdigit()
+        )
+        if not times:
+            break
+        oldest = times[0].zfill(6)
+        if oldest <= "090000" or oldest == previous_oldest:
+            break
+        previous_oldest = oldest
+        next_time = datetime.strptime(oldest, "%H%M%S") - timedelta(minutes=1)
+        input_time = next_time.strftime("%H%M%S")
+        time.sleep(0.55 if is_demo else 0.07)
+
+    if not rows:
+        return pd.DataFrame(columns=["날짜", "시가", "고가", "저가", "종가"])
+
+    frame = pd.DataFrame(rows)
+    required = {
+        "stck_bsop_date",
+        "stck_cntg_hour",
+        "stck_oprc",
+        "stck_hgpr",
+        "stck_lwpr",
+        "stck_prpr",
+    }
+    if not required.issubset(frame.columns):
+        raise RuntimeError("KIS 분봉 응답 형식이 예상과 다릅니다.")
+
+    frame["날짜"] = pd.to_datetime(
+        frame["stck_bsop_date"].astype(str)
+        + frame["stck_cntg_hour"].astype(str).str.zfill(6),
+        format="%Y%m%d%H%M%S",
+        errors="coerce",
+    )
+    frame = frame.rename(
+        columns={
+            "stck_oprc": "시가",
+            "stck_hgpr": "고가",
+            "stck_lwpr": "저가",
+            "stck_prpr": "종가",
+        }
+    )
+    for column in ("시가", "고가", "저가", "종가"):
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+
+    latest_business_date = frame["날짜"].dt.date.max()
+    return (
+        frame.loc[frame["날짜"].dt.date.eq(latest_business_date)]
+        [["날짜", "시가", "고가", "저가", "종가"]]
+        .dropna()
+        .drop_duplicates("날짜", keep="first")
+        .sort_values("날짜")
+        .reset_index(drop=True)
+    )
+
+
+def get_kis_stock_snapshot(stock_code: str) -> dict[str, float | None]:
+    """KIS 현재가 조회에서 시뮬레이션용 종목 기본정보를 반환한다."""
+    stock_code = stock_code.strip()
+    if not stock_code:
+        raise ValueError("종목코드가 필요합니다.")
+
+    app_key, app_secret = _kis_credentials()
+    response = requests.get(
+        f"{_kis_rest_base_url()}{KIS_CURRENT_PRICE_URL}",
+        headers={
+            "authorization": f"Bearer {_kis_rest_access_token()}",
+            "appkey": app_key,
+            "appsecret": app_secret,
+            "tr_id": "FHKST01010100",
+            "custtype": "P",
+        },
+        params={
+            "FID_COND_MRKT_DIV_CODE": "J",
+            "FID_INPUT_ISCD": stock_code,
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    result = response.json()
+    if str(result.get("rt_cd", "0")) != "0":
+        raise RuntimeError(result.get("msg1", "KIS 종목 기본정보 조회 실패"))
+    output = result.get("output") or {}
+
+    def numeric(field: str) -> float | None:
+        value = pd.to_numeric(output.get(field), errors="coerce")
+        return float(value) if pd.notna(value) else None
+
+    return {
+        "listed_shares": numeric("lstn_stcn"),
+        "price": numeric("stck_prpr"),
+        "market_cap_100m_krw": numeric("hts_avls"),
+    }
 
 
 def _kis_reconnect_delay(backoff: int) -> int:

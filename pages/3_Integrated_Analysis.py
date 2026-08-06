@@ -1,15 +1,25 @@
 """기업 주요 손익과 매크로 지표를 함께 보는 통합 분석 페이지."""
 
+import pandas as pd
 import streamlit as st
 
-from dart import COMPANY_INDICATORS, get_company_indicator
+from dart import (
+    COMPANY_INDICATORS,
+    fetch_financial_statements,
+    get_company_indicator,
+    get_stock_code,
+    make_key_financial_statement_tables,
+)
 from integrated import (
     MACRO_INDICATORS,
     aggregate_macro_indicator,
+    build_scenario_financial_defaults,
     get_aggregation_description,
     get_macro_indicator,
     normalize_comparison,
 )
+from live_market import get_kis_stock_snapshot
+from twelve_data import get_live_usd_krw
 
 
 st.set_page_config(
@@ -47,6 +57,63 @@ def load_macro_data(
     return get_macro_indicator(indicator_name, start_year, end_year)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_scenario_reference_data(
+    company: str,
+    end_year: int,
+) -> tuple[dict[str, object], list[str]]:
+    """최신 공시·환율·상장주식 수를 시뮬레이션 기준값으로 연결한다."""
+    warnings: list[str] = []
+    financial_df, dart_warnings = fetch_financial_statements(
+        company,
+        max(2015, end_year - 2),
+        end_year,
+        "사업보고서",
+    )
+    warnings.extend(dart_warnings)
+    if financial_df.empty:
+        raise ValueError("최근 사업보고서 재무제표를 조회하지 못했습니다.")
+
+    try:
+        exchange_frame, _ = get_live_usd_krw(outputsize=5)
+        if exchange_frame.empty:
+            raise ValueError("실시간 환율 응답이 비어 있습니다.")
+        exchange_rate = float(exchange_frame.iloc[-1]["종가"])
+        exchange_source = "Twelve Data USD/KRW 최근 시세"
+    except Exception as error:
+        fallback_frame, _ = get_macro_indicator(
+            "원/달러 환율",
+            max(2015, end_year - 1),
+            end_year,
+        )
+        if fallback_frame.empty:
+            raise ValueError(f"기준 환율을 조회하지 못했습니다: {error}") from error
+        exchange_rate = float(fallback_frame.iloc[-1]["값"])
+        exchange_source = "한국은행 ECOS 원/달러 환율 최근값"
+        warnings.append(
+            f"실시간 환율 대신 ECOS 최근값을 사용했습니다: {error}"
+        )
+
+    listed_shares = None
+    stock_code = get_stock_code(company)
+    if stock_code:
+        try:
+            listed_shares = get_kis_stock_snapshot(stock_code)["listed_shares"]
+        except Exception as error:
+            warnings.append(f"상장주식 수를 조회하지 못했습니다: {error}")
+    else:
+        warnings.append("상장 종목코드를 찾지 못해 EPS 영향은 계산하지 않습니다.")
+
+    defaults = build_scenario_financial_defaults(
+        make_key_financial_statement_tables(financial_df, "억원"),
+        exchange_rate,
+        listed_shares,
+    )
+    defaults["exchange_source"] = exchange_source
+    defaults["stock_code"] = stock_code
+    return defaults, warnings
+
+
 def csv_bytes(frame) -> bytes:
     return frame.to_csv(index=False).encode("utf-8-sig")
 
@@ -60,12 +127,35 @@ def macro_source_description(spec) -> str:
 
 
 @st.fragment
-def render_scenario_simulator(company_name: str) -> None:
+def render_scenario_simulator(company_name: str, end_year: int) -> None:
     with st.expander("🧪 시나리오 시뮬레이션", expanded=False):
         st.caption(
-            f"{company_name}의 공시값이 자동 연결된 계산이 아닙니다. "
-            "아래 재무 입력값은 모두 사용자 가정이며, 단순 민감도 분석입니다."
+            f"{company_name}의 최신 공시 재무값을 자동 연결했습니다. "
+            "재무 기준값은 고정되며 사용자는 환율과 금리 변화만 조작합니다."
         )
+
+        try:
+            with st.spinner("시뮬레이션 기준 재무값을 연결하고 있습니다..."):
+                defaults, reference_warnings = load_scenario_reference_data(
+                    company_name,
+                    end_year,
+                )
+        except Exception as error:
+            st.error(f"시뮬레이션 기준값을 불러오지 못했습니다: {error}")
+            return
+
+        for warning in reference_warnings:
+            st.warning(warning)
+
+        foreign_assets = float(defaults["foreign_assets_million_usd"])
+        foreign_liabilities = float(
+            defaults["foreign_liabilities_million_usd"]
+        )
+        krw_floating_debt = float(defaults["gross_debt_100m_krw"])
+        usd_floating_debt = float(defaults["gross_debt_million_usd"])
+        assumed_exchange_rate = float(defaults["exchange_rate"])
+        tax_rate = defaults["effective_tax_rate"]
+        shares_in_ten_thousands = defaults["shares_in_ten_thousands"]
 
         scenario = st.selectbox(
             "시나리오 종류",
@@ -73,63 +163,56 @@ def render_scenario_simulator(company_name: str) -> None:
             key="simulator_scenario",
         )
 
-        st.markdown("##### 계산 기준 · 사용자 가정값")
-        exposure_columns = st.columns(2)
-        foreign_assets = exposure_columns[0].number_input(
-            "달러 자산 (백만 USD)",
-            min_value=0.0,
-            value=0.0,
-            step=10.0,
-            key="simulator_foreign_assets",
-            help="달러 표시 현금, 매출채권 등 환율에 노출된 자산 가정값",
+        st.markdown("##### 자동 연결된 계산 기준")
+        basis_columns = st.columns(3)
+        basis_columns[0].metric(
+            "환율 민감 자산 대용값",
+            f"{float(defaults['fx_assets_proxy_100m_krw']):,.0f}억원",
+            help="현금및현금성자산 + 단기금융상품 + 매출채권",
         )
-        foreign_liabilities = exposure_columns[1].number_input(
-            "달러 부채 (백만 USD)",
-            min_value=0.0,
-            value=0.0,
-            step=10.0,
-            key="simulator_foreign_liabilities",
-            help="달러 표시 매입채무, 차입금 등 환율에 노출된 부채 가정값",
+        basis_columns[1].metric(
+            "환율 민감 부채 대용값",
+            f"{float(defaults['fx_liabilities_proxy_100m_krw']):,.0f}억원",
+            help="매입채무 + 단기·장기차입금 + 사채",
         )
-
-        borrowing_columns = st.columns(2)
-        krw_floating_debt = borrowing_columns[0].number_input(
-            "원화 변동금리 차입금 (억원)",
-            min_value=0.0,
-            value=0.0,
-            step=100.0,
-            key="simulator_krw_debt",
+        basis_columns[2].metric(
+            "총차입금",
+            f"{krw_floating_debt:,.0f}억원",
+            help="단기차입금 + 장기차입금 + 사채",
         )
-        usd_floating_debt = borrowing_columns[1].number_input(
-            "달러 변동금리 차입금 (백만 USD)",
-            min_value=0.0,
-            value=0.0,
-            step=10.0,
-            key="simulator_usd_debt",
-        )
-
         calculation_columns = st.columns(3)
-        assumed_exchange_rate = calculation_columns[0].number_input(
-            "환산 환율 (원/USD)",
-            min_value=1.0,
-            value=1400.0,
-            step=10.0,
-            key="simulator_exchange_rate",
+        calculation_columns[0].metric(
+            "기준 환율",
+            f"{assumed_exchange_rate:,.2f}원/USD",
         )
-        tax_rate = calculation_columns[1].number_input(
-            "유효세율 (%)",
-            min_value=0.0,
-            max_value=100.0,
-            value=24.0,
-            step=1.0,
-            key="simulator_tax_rate",
+        calculation_columns[1].metric(
+            "자동 산출 유효세율",
+            f"{float(tax_rate):.2f}%" if tax_rate is not None else "산출 불가",
+            help="법인세비용 ÷ (지배기업 순이익 + 법인세비용)",
         )
-        shares_in_ten_thousands = calculation_columns[2].number_input(
-            "발행주식 수 (만 주)",
-            min_value=0.0,
-            value=0.0,
-            step=100.0,
-            key="simulator_shares",
+        calculation_columns[2].metric(
+            "상장주식 수",
+            (
+                f"{float(defaults['listed_shares']):,.0f}주"
+                if defaults["listed_shares"] is not None
+                else "조회 불가"
+            ),
+        )
+        st.caption(
+            f"재무 기준: DART 연결 사업보고서 {defaults['period']} · "
+            f"환율: {defaults['exchange_source']} · "
+            f"상장주식 수: 한국투자증권 KIS"
+        )
+        if defaults["missing_accounts"]:
+            st.warning(
+                "공시에서 확인되지 않은 자동 연결 계정: "
+                + ", ".join(defaults["missing_accounts"])
+                + ". 해당 항목은 대용값 합계에서 제외했습니다."
+            )
+        st.info(
+            "3대 재무제표에는 통화별 자산·부채와 고정·변동금리 구분이 없어 "
+            "위 계정 합계를 자동 대용값으로 사용합니다. 한국·미국 금리 "
+            "시나리오는 각각 총차입금 전체가 해당 금리에 민감하다고 가정합니다."
         )
 
         st.markdown("##### 시나리오 변화량")
@@ -185,10 +268,18 @@ def render_scenario_simulator(company_name: str) -> None:
             krw_interest_change + usd_interest_change
         )
         pretax_effect = foreign_exchange_effect - interest_expense_change
-        net_income_effect = pretax_effect * (1 - tax_rate / 100)
+        net_income_effect = (
+            pretax_effect * (1 - float(tax_rate) / 100)
+            if tax_rate is not None
+            else None
+        )
         eps_effect = (
-            net_income_effect * 10_000 / shares_in_ten_thousands
-            if shares_in_ten_thousands > 0
+            net_income_effect * 10_000 / float(shares_in_ten_thousands)
+            if (
+                net_income_effect is not None
+                and shares_in_ten_thousands is not None
+                and float(shares_in_ten_thousands) > 0
+            )
             else None
         )
 
@@ -208,12 +299,16 @@ def render_scenario_simulator(company_name: str) -> None:
         )
         result_columns[2].metric(
             "예상 순이익 변화",
-            f"{net_income_effect:+,.0f}억원",
+            (
+                f"{net_income_effect:+,.0f}억원"
+                if net_income_effect is not None
+                else "계산 불가"
+            ),
         )
         result_columns[3].metric(
             "예상 EPS 변화",
             f"{eps_effect:+,.0f}원" if eps_effect is not None else "계산 불가",
-            help="발행주식 수를 입력해야 계산됩니다.",
+            help="유효세율과 상장주식 수가 자동 조회되어야 계산됩니다.",
         )
 
         with st.popover("계산식과 해석 기준"):
@@ -233,7 +328,8 @@ def render_scenario_simulator(company_name: str) -> None:
             )
 
         st.warning(
-            "이 결과는 사용자가 입력한 가정에 따른 단순 추정치입니다. "
+            "이 결과는 공시 계정 대용값과 사용자가 선택한 매크로 충격에 따른 "
+            "단순 추정치입니다. "
             "환헤지, 고정·변동금리 비중, 세무 효과, 회계상 환산손익 및 "
             "사업별 매출 민감도는 반영하지 않았으며 투자 판단 근거가 아닙니다."
         )
@@ -530,4 +626,4 @@ else:
                 )
 
             st.divider()
-            render_scenario_simulator(company.strip())
+            render_scenario_simulator(company.strip(), int(end_year))

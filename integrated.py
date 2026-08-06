@@ -74,6 +74,107 @@ def aggregate_macro_indicator(
     return quarterly[["연도", "분기", "기간", "값"]].reset_index(drop=True)
 
 
+def build_scenario_financial_defaults(
+    statement_tables: dict[str, pd.DataFrame],
+    exchange_rate: float,
+    listed_shares: float | None,
+) -> dict[str, object]:
+    """핵심 재무제표에서 시나리오 계산용 읽기 전용 기준값을 만든다.
+
+    외화 및 변동금리 세부 내역은 3대 재무제표에 없으므로 현금성자산·채권과
+    매입채무·총차입금을 각각 환율 민감 자산·부채의 대용값으로 사용한다.
+    """
+    if exchange_rate <= 0:
+        raise ValueError("기준 환율은 0보다 커야 합니다.")
+
+    rows: list[pd.DataFrame] = []
+    for table in statement_tables.values():
+        if not table.empty:
+            rows.append(table)
+    if not rows:
+        raise ValueError("시뮬레이션에 연결할 핵심 재무제표가 없습니다.")
+
+    combined = pd.concat(rows, ignore_index=True)
+    period_columns = [
+        column
+        for column in combined.columns
+        if column not in ("재무제표", "계정명")
+    ]
+    if not period_columns:
+        raise ValueError("시뮬레이션 기준 기간을 찾지 못했습니다.")
+    latest_period = next(
+        (
+            period
+            for period in reversed(period_columns)
+            if pd.to_numeric(combined[period], errors="coerce").notna().any()
+        ),
+        None,
+    )
+    if latest_period is None:
+        raise ValueError("최신 재무제표에 사용할 수 있는 금액이 없습니다.")
+
+    def account_value(account_name: str) -> float | None:
+        matched = combined.loc[combined["계정명"].eq(account_name), latest_period]
+        if matched.empty:
+            return None
+        numeric = pd.to_numeric(matched, errors="coerce").dropna()
+        return float(numeric.iloc[0]) if not numeric.empty else None
+
+    values = {
+        account: account_value(account)
+        for account in (
+            "현금및현금성자산",
+            "단기금융상품",
+            "매출채권",
+            "매입채무",
+            "단기차입금 + 장기차입금 + 사채",
+            "법인세비용",
+            "지배기업 소유주지분 순이익",
+        )
+    }
+    asset_accounts = ("현금및현금성자산", "단기금융상품", "매출채권")
+    liability_accounts = ("매입채무", "단기차입금 + 장기차입금 + 사채")
+    fx_assets_proxy = sum(values[name] or 0.0 for name in asset_accounts)
+    fx_liabilities_proxy = sum(values[name] or 0.0 for name in liability_accounts)
+    gross_debt = values["단기차입금 + 장기차입금 + 사채"] or 0.0
+
+    tax_expense = values["법인세비용"]
+    owner_profit = values["지배기업 소유주지분 순이익"]
+    effective_tax_rate: float | None = None
+    if tax_expense is not None and owner_profit is not None:
+        pretax_proxy = owner_profit + tax_expense
+        if pretax_proxy > 0:
+            effective_tax_rate = min(
+                100.0,
+                max(0.0, tax_expense / pretax_proxy * 100),
+            )
+
+    missing_accounts = [
+        account for account, value in values.items() if value is None
+    ]
+    return {
+        "period": latest_period,
+        "account_values": values,
+        "fx_assets_proxy_100m_krw": fx_assets_proxy,
+        "fx_liabilities_proxy_100m_krw": fx_liabilities_proxy,
+        "foreign_assets_million_usd": fx_assets_proxy * 100 / exchange_rate,
+        "foreign_liabilities_million_usd": (
+            fx_liabilities_proxy * 100 / exchange_rate
+        ),
+        "gross_debt_100m_krw": gross_debt,
+        "gross_debt_million_usd": gross_debt * 100 / exchange_rate,
+        "exchange_rate": float(exchange_rate),
+        "effective_tax_rate": effective_tax_rate,
+        "listed_shares": listed_shares,
+        "shares_in_ten_thousands": (
+            float(listed_shares) / 10_000
+            if listed_shares is not None and listed_shares > 0
+            else None
+        ),
+        "missing_accounts": missing_accounts,
+    }
+
+
 def get_aggregation_description(
     display_name: str,
     frequency: str,
