@@ -1,5 +1,7 @@
 venv/
 .env
 __pycache__/
+data/*.db
+data/*.db-*
 *.pyc
 docs_cache/

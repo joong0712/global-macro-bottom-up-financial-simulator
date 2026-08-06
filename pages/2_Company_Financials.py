@@ -7,6 +7,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from auth import record_user_history, require_login
+
 from dart import (
     AMOUNT_UNITS,
     REPORT_CODES,
@@ -28,6 +30,7 @@ st.set_page_config(
     page_icon="📑",
     layout="wide",
 )
+require_login()
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_financial_statements(
@@ -483,9 +486,25 @@ if search_button:
         st.session_state["dart_result"] = {
             "company": company.strip(),
             "report_name": report_name,
+            "start_year": int(start_year),
+            "end_year": int(end_year),
+            "amount_unit": amount_unit,
             "data": financial_df,
             "warnings": warnings,
         }
+        record_user_history(
+            "company_financials",
+            f"{company.strip()} 재무제표 조회",
+            {
+                "company": company.strip(),
+                "start_year": int(start_year),
+                "end_year": int(end_year),
+                "report_type": report_name,
+                "amount_unit": amount_unit,
+                "row_count": int(len(financial_df)),
+                "warnings": warnings,
+            },
+        )
     except Exception as error:
         st.error(f"재무제표 조회 중 오류가 발생했습니다: {error}")
 
@@ -497,6 +516,7 @@ else:
         st.warning(warning)
 
     financial_df = result["data"]
+    amount_unit = result.get("amount_unit", amount_unit)
     if financial_df.empty:
         st.error("선택 기간에 조회 가능한 재무제표가 없습니다.")
     else:

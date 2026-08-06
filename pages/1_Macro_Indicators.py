@@ -8,6 +8,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from auth import record_user_history, require_login
+
 from ecos import (
     CORE_INDICATORS,
     EXCHANGE_CURRENCIES,
@@ -37,6 +39,7 @@ st.set_page_config(
     page_icon="📈",
     layout="wide",
 )
+require_login()
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def load_ecos_indicators(
@@ -888,6 +891,22 @@ def render_dashboard(
             "indicator_data": indicator_data,
             "errors": errors,
         }
+        record_user_history(
+            "macro_search",
+            f"{source_name} 매크로 지표 조회",
+            {
+                "source": source_name,
+                "start_month": start_date,
+                "end_month": end_date,
+                "indicators": list(selected_names),
+                "successful_indicators": [
+                    name
+                    for name in selected_names
+                    if name in indicator_data and not indicator_data[name].empty
+                ],
+                "errors": errors,
+            },
+        )
     elif result_key in st.session_state:
         saved_result = st.session_state[result_key]
         start_date = saved_result["start_date"]

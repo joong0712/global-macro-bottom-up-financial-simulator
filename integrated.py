@@ -175,6 +175,221 @@ def build_scenario_financial_defaults(
     }
 
 
+def build_financial_report_snapshot(
+    statement_tables: dict[str, pd.DataFrame],
+) -> dict[str, object]:
+    """핵심 재무표에서 실무 보고서용 요약값과 원자료를 만든다."""
+    available = [table for table in statement_tables.values() if not table.empty]
+    if not available:
+        return {"unit": "억원", "periods": [], "key_metrics": {}, "statements": {}}
+
+    combined = pd.concat(available, ignore_index=True)
+    periods = [
+        column
+        for column in combined.columns
+        if column not in ("재무제표", "계정명")
+    ]
+    usable_periods = [
+        period
+        for period in periods
+        if pd.to_numeric(combined[period], errors="coerce").notna().any()
+    ]
+    recent_periods = usable_periods[-3:]
+    if not recent_periods:
+        return {"unit": "억원", "periods": [], "key_metrics": {}, "statements": {}}
+
+    def account_value(account_name: str, period: str) -> float | None:
+        matched = combined.loc[combined["계정명"].eq(account_name), period]
+        numeric = pd.to_numeric(matched, errors="coerce").dropna()
+        return float(numeric.iloc[0]) if not numeric.empty else None
+
+    latest = recent_periods[-1]
+    previous = recent_periods[-2] if len(recent_periods) > 1 else None
+    account_labels = {
+        "revenue": "수익(매출액)",
+        "operating_income": "영업이익",
+        "net_income": "지배기업 소유주지분 순이익",
+        "operating_cash_flow": "영업활동 현금흐름",
+        "capex": "유형자산의 취득 (CapEx)",
+        "cash": "현금및현금성자산",
+        "short_term_financial_products": "단기금융상품",
+        "gross_debt": "단기차입금 + 장기차입금 + 사채",
+        "equity": "지배기업 소유주지분",
+    }
+
+    values = {
+        key: account_value(label, latest)
+        for key, label in account_labels.items()
+    }
+    previous_values = {
+        key: account_value(label, previous) if previous else None
+        for key, label in account_labels.items()
+    }
+
+    def ratio(numerator: float | None, denominator: float | None) -> float | None:
+        if numerator is None or denominator in (None, 0):
+            return None
+        return round(numerator / denominator * 100, 4)
+
+    def growth(current: float | None, prior: float | None) -> float | None:
+        if current is None or prior in (None, 0):
+            return None
+        return round((current / prior - 1) * 100, 4)
+
+    cash_total = (
+        values["cash"] + values["short_term_financial_products"]
+        if values["cash"] is not None
+        and values["short_term_financial_products"] is not None
+        else None
+    )
+    net_debt = (
+        values["gross_debt"] - cash_total
+        if values["gross_debt"] is not None and cash_total is not None
+        else None
+    )
+    free_cash_flow = (
+        values["operating_cash_flow"] - abs(values["capex"])
+        if values["operating_cash_flow"] is not None
+        and values["capex"] is not None
+        else None
+    )
+    previous_cash_total = (
+        previous_values["cash"]
+        + previous_values["short_term_financial_products"]
+        if previous_values["cash"] is not None
+        and previous_values["short_term_financial_products"] is not None
+        else None
+    )
+    previous_net_debt = (
+        previous_values["gross_debt"] - previous_cash_total
+        if previous_values["gross_debt"] is not None
+        and previous_cash_total is not None
+        else None
+    )
+    previous_free_cash_flow = (
+        previous_values["operating_cash_flow"]
+        - abs(previous_values["capex"])
+        if previous_values["operating_cash_flow"] is not None
+        and previous_values["capex"] is not None
+        else None
+    )
+    key_metrics = {
+        "latest_period": latest,
+        "previous_period": previous,
+        "revenue_100m_krw": values["revenue"],
+        "previous_revenue_100m_krw": previous_values["revenue"],
+        "revenue_growth_pct": growth(
+            values["revenue"], previous_values["revenue"]
+        ),
+        "operating_income_100m_krw": values["operating_income"],
+        "previous_operating_income_100m_krw": previous_values[
+            "operating_income"
+        ],
+        "operating_income_growth_pct": growth(
+            values["operating_income"], previous_values["operating_income"]
+        ),
+        "operating_margin_pct": ratio(
+            values["operating_income"], values["revenue"]
+        ),
+        "previous_operating_margin_pct": ratio(
+            previous_values["operating_income"], previous_values["revenue"]
+        ),
+        "controlling_net_income_100m_krw": values["net_income"],
+        "previous_controlling_net_income_100m_krw": previous_values[
+            "net_income"
+        ],
+        "net_margin_pct": ratio(values["net_income"], values["revenue"]),
+        "previous_net_margin_pct": ratio(
+            previous_values["net_income"], previous_values["revenue"]
+        ),
+        "operating_cash_flow_100m_krw": values["operating_cash_flow"],
+        "previous_operating_cash_flow_100m_krw": previous_values[
+            "operating_cash_flow"
+        ],
+        "capex_100m_krw": values["capex"],
+        "previous_capex_100m_krw": previous_values["capex"],
+        "simple_fcf_100m_krw": free_cash_flow,
+        "previous_simple_fcf_100m_krw": previous_free_cash_flow,
+        "gross_debt_100m_krw": values["gross_debt"],
+        "previous_gross_debt_100m_krw": previous_values["gross_debt"],
+        "cash_and_short_investments_100m_krw": cash_total,
+        "previous_cash_and_short_investments_100m_krw": previous_cash_total,
+        "net_debt_100m_krw": net_debt,
+        "previous_net_debt_100m_krw": previous_net_debt,
+        "controlling_equity_100m_krw": values["equity"],
+        "previous_controlling_equity_100m_krw": previous_values["equity"],
+    }
+
+    statements: dict[str, list[dict[str, object]]] = {}
+    for statement_name, table in statement_tables.items():
+        rows: list[dict[str, object]] = []
+        for _, source_row in table.iterrows():
+            row: dict[str, object] = {"account": str(source_row["계정명"])}
+            for period in recent_periods:
+                value = source_row.get(period)
+                row[period] = float(value) if pd.notna(value) else None
+            rows.append(row)
+        statements[statement_name] = rows
+
+    return {
+        "unit": "억원",
+        "periods": recent_periods,
+        "key_metrics": key_metrics,
+        "statements": statements,
+        "calculation_notes": {
+            "simple_fcf": "영업활동 현금흐름 - 유형자산 취득액의 절댓값",
+            "net_debt": "총차입금 - 현금및현금성자산 - 단기금융상품",
+        },
+    }
+
+
+def calculate_scenario_effects(
+    defaults: dict[str, object],
+    exchange_change: float,
+    korea_rate_change: float,
+    usa_rate_change: float,
+) -> dict[str, float | None]:
+    """자동 연결 기준값과 매크로 충격으로 시나리오 영향을 계산한다."""
+    foreign_assets = float(defaults["foreign_assets_million_usd"])
+    foreign_liabilities = float(defaults["foreign_liabilities_million_usd"])
+    gross_debt = float(defaults["gross_debt_100m_krw"])
+    usd_debt = float(defaults["gross_debt_million_usd"])
+    exchange_rate = float(defaults["exchange_rate"])
+
+    foreign_exchange_effect = (
+        (foreign_assets - foreign_liabilities) * exchange_change / 100
+    )
+    krw_interest_change = gross_debt * korea_rate_change / 100
+    usd_debt_in_100m_krw = usd_debt * exchange_rate / 100
+    usd_interest_change = usd_debt_in_100m_krw * usa_rate_change / 100
+    interest_expense_change = krw_interest_change + usd_interest_change
+    pretax_effect = foreign_exchange_effect - interest_expense_change
+
+    tax_rate = defaults.get("effective_tax_rate")
+    net_income_effect = (
+        pretax_effect * (1 - float(tax_rate) / 100)
+        if tax_rate is not None
+        else None
+    )
+    shares = defaults.get("shares_in_ten_thousands")
+    eps_effect = (
+        net_income_effect * 10_000 / float(shares)
+        if (
+            net_income_effect is not None
+            and shares is not None
+            and float(shares) > 0
+        )
+        else None
+    )
+    return {
+        "foreign_exchange_effect_100m_krw": foreign_exchange_effect,
+        "interest_expense_change_100m_krw": interest_expense_change,
+        "pretax_effect_100m_krw": pretax_effect,
+        "net_income_effect_100m_krw": net_income_effect,
+        "eps_effect_krw": eps_effect,
+    }
+
+
 def get_aggregation_description(
     display_name: str,
     frequency: str,

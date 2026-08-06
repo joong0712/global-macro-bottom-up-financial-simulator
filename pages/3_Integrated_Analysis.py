@@ -1,8 +1,16 @@
 """기업 주요 손익과 매크로 지표를 함께 보는 통합 분석 페이지."""
 
+import os
+
 import pandas as pd
 import streamlit as st
 
+from auth import record_user_history, require_login
+from ai_report import (
+    generate_ai_report,
+    report_to_pdf,
+    report_context_fingerprint,
+)
 from dart import (
     COMPANY_INDICATORS,
     fetch_financial_statements,
@@ -13,7 +21,9 @@ from dart import (
 from integrated import (
     MACRO_INDICATORS,
     aggregate_macro_indicator,
+    build_financial_report_snapshot,
     build_scenario_financial_defaults,
+    calculate_scenario_effects,
     get_aggregation_description,
     get_macro_indicator,
     normalize_comparison,
@@ -27,6 +37,7 @@ st.set_page_config(
     page_icon="🔗",
     layout="wide",
 )
+require_login()
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -95,22 +106,29 @@ def load_scenario_reference_data(
         )
 
     listed_shares = None
+    market_snapshot: dict[str, float | None] = {}
     stock_code = get_stock_code(company)
     if stock_code:
         try:
-            listed_shares = get_kis_stock_snapshot(stock_code)["listed_shares"]
+            market_snapshot = get_kis_stock_snapshot(stock_code)
+            listed_shares = market_snapshot["listed_shares"]
         except Exception as error:
             warnings.append(f"상장주식 수를 조회하지 못했습니다: {error}")
     else:
         warnings.append("상장 종목코드를 찾지 못해 EPS 영향은 계산하지 않습니다.")
 
+    statement_tables = make_key_financial_statement_tables(financial_df, "억원")
     defaults = build_scenario_financial_defaults(
-        make_key_financial_statement_tables(financial_df, "억원"),
+        statement_tables,
         exchange_rate,
         listed_shares,
     )
     defaults["exchange_source"] = exchange_source
     defaults["stock_code"] = stock_code
+    defaults["market_snapshot"] = market_snapshot
+    defaults["financial_report_snapshot"] = build_financial_report_snapshot(
+        statement_tables
+    )
     return defaults, warnings
 
 
@@ -124,6 +142,142 @@ def macro_source_description(spec) -> str:
             f"한국은행 ECOS {spec.stat_code} / {spec.item_code}"
         )
     return f"FRED {spec.series_id}"
+
+
+def dataframe_records(frame: pd.DataFrame | None) -> list[dict[str, object]]:
+    """AI 컨텍스트에 넣을 수 있도록 결측치를 제거한 레코드로 변환한다."""
+    if frame is None or frame.empty:
+        return []
+    return frame.where(pd.notna(frame), None).to_dict(orient="records")
+
+
+def build_ai_report_context(
+    *,
+    company: str,
+    start_year: int,
+    end_year: int,
+    frequency: str,
+    company_indicator: str,
+    macro_indicator: str,
+    normalization_method: str,
+    company_data: pd.DataFrame,
+    macro_data: pd.DataFrame,
+    normalized: pd.DataFrame | None,
+    company_source: str,
+    macro_source: str,
+) -> dict[str, object]:
+    scenario_context = st.session_state.get("scenario_report_context")
+    if not isinstance(scenario_context, dict) or scenario_context.get(
+        "company"
+    ) != company:
+        scenario_context = {"상태": "시나리오 기준값을 불러오지 못함"}
+    market_info = scenario_context.get("시장정보", {})
+    financial_summary = scenario_context.get("핵심재무요약", {})
+    scenario_analysis = {
+        key: value
+        for key, value in scenario_context.items()
+        if key not in ("시장정보", "핵심재무요약")
+    }
+    return {
+        "기업": company,
+        "분석기간": f"{start_year}~{end_year}",
+        "비교주기": frequency,
+        "기업지표": company_indicator,
+        "매크로지표": macro_indicator,
+        "정규화방식": normalization_method,
+        "기업지표계열": dataframe_records(company_data),
+        "매크로지표계열": dataframe_records(macro_data),
+        "정규화비교계열": dataframe_records(normalized),
+        "시장정보": market_info,
+        "핵심재무요약": financial_summary,
+        "시나리오": scenario_analysis,
+        "데이터출처": {
+            "기업": company_source,
+            "매크로": macro_source,
+            "재무": "금융감독원 Open DART 연결 사업보고서",
+            "상장주식수": "한국투자증권 KIS",
+        },
+        "해석주의": [
+            "정규화 비교는 방향과 흐름을 보기 위한 것이며 인과관계를 뜻하지 않음",
+            "시나리오는 공시 계정 대용값을 사용한 단순 민감도 분석임",
+            "환헤지와 통화별·고정변동금리별 세부 내역은 반영하지 않음",
+        ],
+    }
+
+
+def render_ai_report(company: str, context: dict[str, object]) -> None:
+    st.subheader("✨ AI 분석 보고서")
+    st.caption(
+        "현재 화면의 기업·매크로·시나리오 데이터만 Gemini에 전달하여 "
+        "한국어 보고서를 생성합니다."
+    )
+    st.info(
+        "Gemini 무료 구간에서는 전송 데이터가 Google 제품 개선에 사용될 수 "
+        "있습니다. 이 기능은 공개 기업·시장 데이터만 전송합니다."
+    )
+    configured = bool(os.getenv("GEMINI_KEY") or os.getenv("GEMINI_API_KEY"))
+    if not configured:
+        st.warning("GEMINI_KEY가 설정되지 않아 AI 보고서를 생성할 수 없습니다.")
+        return
+
+    fingerprint = report_context_fingerprint(context)
+    if st.button(
+        "AI 보고서 생성",
+        type="primary",
+        key="generate_ai_report",
+        width="stretch",
+    ):
+        try:
+            with st.spinner("AI가 분석 보고서를 작성하고 있습니다..."):
+                report, model = generate_ai_report(context)
+            st.session_state["generated_ai_report"] = {
+                "fingerprint": fingerprint,
+                "company": company,
+                "model": model,
+                "report": report,
+            }
+            record_user_history(
+                "ai_report",
+                f"{company} AI 분석 보고서",
+                {
+                    "company": company,
+                    "model": model,
+                    "report": report,
+                    "analysis_context": context,
+                },
+            )
+        except Exception as error:
+            st.error(f"AI 보고서 생성 중 오류가 발생했습니다: {error}")
+
+    stored = st.session_state.get("generated_ai_report")
+    if not isinstance(stored, dict):
+        return
+    if stored.get("fingerprint") != fingerprint:
+        st.caption(
+            "분석 조건이 변경되었습니다. 현재 데이터 기준으로 보고서를 다시 "
+            "생성해 주세요."
+        )
+        return
+
+    report = str(stored.get("report", ""))
+    if not report:
+        return
+    st.caption(f"생성 모델: {stored.get('model', '-')}")
+    with st.container(border=True):
+        st.markdown(report)
+    try:
+        pdf_data = report_to_pdf(report, title=f"{company} AI 분석 보고서")
+    except Exception as error:
+        st.error(f"PDF 변환 중 오류가 발생했습니다: {error}")
+    else:
+        st.download_button(
+            "PDF 보고서 다운로드",
+            data=pdf_data,
+            file_name=f"{company}_AI_분석_보고서.pdf",
+            mime="application/pdf",
+            key="download_ai_report_pdf",
+            on_click="ignore",
+        )
 
 
 @st.fragment
@@ -147,15 +301,9 @@ def render_scenario_simulator(company_name: str, end_year: int) -> None:
         for warning in reference_warnings:
             st.warning(warning)
 
-        foreign_assets = float(defaults["foreign_assets_million_usd"])
-        foreign_liabilities = float(
-            defaults["foreign_liabilities_million_usd"]
-        )
         krw_floating_debt = float(defaults["gross_debt_100m_krw"])
-        usd_floating_debt = float(defaults["gross_debt_million_usd"])
         assumed_exchange_rate = float(defaults["exchange_rate"])
         tax_rate = defaults["effective_tax_rate"]
-        shares_in_ten_thousands = defaults["shares_in_ten_thousands"]
 
         scenario = st.selectbox(
             "시나리오 종류",
@@ -251,37 +399,55 @@ def render_scenario_simulator(company_name: str, end_year: int) -> None:
                 key="simulator_usa_rate_change",
             )
 
-        net_usd_exposure = foreign_assets - foreign_liabilities
-        foreign_exchange_effect = (
-            net_usd_exposure * exchange_change / 100
+        effects = calculate_scenario_effects(
+            defaults,
+            exchange_change,
+            korea_rate_change,
+            usa_rate_change,
         )
-        krw_interest_change = (
-            krw_floating_debt * korea_rate_change / 100
+        foreign_exchange_effect = float(
+            effects["foreign_exchange_effect_100m_krw"] or 0.0
         )
-        usd_debt_in_100m_krw = (
-            usd_floating_debt * assumed_exchange_rate / 100
+        interest_expense_change = float(
+            effects["interest_expense_change_100m_krw"] or 0.0
         )
-        usd_interest_change = (
-            usd_debt_in_100m_krw * usa_rate_change / 100
-        )
-        interest_expense_change = (
-            krw_interest_change + usd_interest_change
-        )
-        pretax_effect = foreign_exchange_effect - interest_expense_change
-        net_income_effect = (
-            pretax_effect * (1 - float(tax_rate) / 100)
-            if tax_rate is not None
-            else None
-        )
-        eps_effect = (
-            net_income_effect * 10_000 / float(shares_in_ten_thousands)
-            if (
-                net_income_effect is not None
-                and shares_in_ten_thousands is not None
-                and float(shares_in_ten_thousands) > 0
-            )
-            else None
-        )
+        net_income_effect = effects["net_income_effect_100m_krw"]
+        eps_effect = effects["eps_effect_krw"]
+        st.session_state["scenario_report_context"] = {
+            "company": company_name,
+            "시나리오종류": scenario,
+            "재무기준기간": defaults["period"],
+            "기준환율_원_USD": assumed_exchange_rate,
+            "환율민감자산_대용값_억원": defaults[
+                "fx_assets_proxy_100m_krw"
+            ],
+            "환율민감부채_대용값_억원": defaults[
+                "fx_liabilities_proxy_100m_krw"
+            ],
+            "총차입금_억원": krw_floating_debt,
+            "유효세율_퍼센트": tax_rate,
+            "상장주식수_주": defaults["listed_shares"],
+            "시장정보": {
+                "종목코드": defaults["stock_code"],
+                "주가_원": defaults["market_snapshot"].get("price"),
+                "시가총액_억원": defaults["market_snapshot"].get(
+                    "market_cap_100m_krw"
+                ),
+                "가격기준": "한국투자증권 KIS 조회 시점",
+            },
+            "핵심재무요약": defaults["financial_report_snapshot"],
+            "사용자변수": {
+                "환율변화_원": exchange_change,
+                "한국금리변화_퍼센트포인트": korea_rate_change,
+                "미국금리변화_퍼센트포인트": usa_rate_change,
+            },
+            "계산결과": effects,
+            "누락계정": defaults["missing_accounts"],
+            "대용값주의": (
+                "통화별 자산·부채 및 고정·변동금리 구분이 없어 핵심 계정 "
+                "합계와 총차입금을 대용값으로 사용"
+            ),
+        }
 
         st.divider()
         st.markdown("##### 예상 영향")
@@ -333,6 +499,17 @@ def render_scenario_simulator(company_name: str, end_year: int) -> None:
             "환헤지, 고정·변동금리 비중, 세무 효과, 회계상 환산손익 및 "
             "사업별 매출 민감도는 반영하지 않았으며 투자 판단 근거가 아닙니다."
         )
+        if st.button(
+            "현재 시나리오 기록 저장",
+            key="save_current_scenario",
+            width="stretch",
+        ):
+            record_user_history(
+                "scenario",
+                f"{company_name} {scenario} 시나리오",
+                st.session_state["scenario_report_context"],
+            )
+            st.success("현재 시나리오를 내 기록에 저장했습니다.")
 
 
 st.title("🏢 기업-매크로 통합 분석")
@@ -409,6 +586,7 @@ with st.form("integrated_analysis_form"):
         width="stretch",
     )
 
+submitted_now = bool(search_button)
 if search_button:
     st.session_state["integrated_last_form"] = {
         "company": company,
@@ -472,6 +650,22 @@ else:
         elif macro_data.empty:
             st.error(f"{macro_indicator} 데이터를 조회하지 못했습니다.")
         else:
+            if submitted_now:
+                record_user_history(
+                    "integrated_analysis",
+                    f"{company.strip()} 통합 분석",
+                    {
+                        "company": company.strip(),
+                        "start_year": int(start_year),
+                        "end_year": int(end_year),
+                        "frequency": frequency,
+                        "company_indicator": company_indicator,
+                        "macro_indicator": macro_indicator,
+                        "normalization_method": normalization_method,
+                        "company_data_points": int(len(company_data)),
+                        "macro_data_points": int(len(macro_data)),
+                    },
+                )
             st.subheader(
                 f"{company.strip()} {company_indicator} ↔ {macro_indicator}"
             )
@@ -627,3 +821,20 @@ else:
 
             st.divider()
             render_scenario_simulator(company.strip(), int(end_year))
+
+            st.divider()
+            ai_context = build_ai_report_context(
+                company=company.strip(),
+                start_year=int(start_year),
+                end_year=int(end_year),
+                frequency=frequency,
+                company_indicator=company_indicator,
+                macro_indicator=macro_indicator,
+                normalization_method=normalization_method,
+                company_data=company_data,
+                macro_data=macro_data,
+                normalized=normalized,
+                company_source=f"DART {report_basis}",
+                macro_source=macro_source_description(macro_spec),
+            )
+            render_ai_report(company.strip(), ai_context)
