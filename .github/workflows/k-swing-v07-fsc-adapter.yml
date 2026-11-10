@@ -1,0 +1,46 @@
+name: K-SWING v0.7 FSC authorized snapshot adapter CI
+
+on:
+  push:
+    branches: [research/k-swing-v07]
+    paths:
+      - '.github/workflows/k-swing-v07-fsc-adapter.yml'
+      - 'research/k_swing/fsc_snapshot_v07.py'
+      - 'research/k_swing/tests/test_fsc_snapshot_v07.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fsc-authorized-client-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Verify mandatory key / as-of ISIN and no 2026
+        run: python -m pytest -q research/k_swing/tests/test_fsc_snapshot_v07.py
+      - name: Record actual official historical coverage status
+        env:
+          FSC_STOCK_API_KEY: ${{ secrets.FSC_STOCK_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          present=bool(os.environ.get("FSC_STOCK_API_KEY","").strip())
+          if present:
+              status="ACCESS_CREDENTIAL_PRESENT__NOT_AUTO_DOWNLOADING_HISTORICAL_DATA"
+              explanation="Service key is present but automated external downloads are not authorized by this smoke job."
+          else:
+              status="BLOCKED_NO_FSC_STOCK_API_KEY"
+              explanation="No credential connected; no official historical records were retrieved."
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(
+              "# FSC/KRX historical reference access status\n\n"
+              f"**{status}**\n\n{explanation}\n\n"
+              "The mock-data client tests do not verify delistings, splits, or live trade profit.\n"
+          )
+          print(status)
+          PY
