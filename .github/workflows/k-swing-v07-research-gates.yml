@@ -1,0 +1,159 @@
+name: K-SWING v0.7 three parallel integrity jobs
+
+on:
+  push:
+    branches: [research/k-swing-v07]
+    paths:
+      - 'research/k_swing/*_v07.py'
+      - 'research/k_swing/tests/test_*_v07.py'
+      - '.github/workflows/k-swing-v07-research-gates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  official-data-integrity:
+    name: Official corporate-action & delisting evidence gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Test no-false-certification and delayed release safeguards
+        run: python -m pytest -q research/k_swing/tests/test_official_events_v07.py
+      - name: Audit official coverage (NO authorized historical source yet)
+        run: |
+          python -m research.k_swing.official_events_v07 \
+            --output "$RUNNER_TEMP/official-evidence-gate.json"
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          x=json.loads((Path(os.environ['RUNNER_TEMP'])/'official-evidence-gate.json').read_text())
+          assert x["status"].startswith("BLOCKED")
+          assert not x["delisting_outcomes_verified"]
+          assert not x["corporate_action_adjusted_prices_verified"]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(
+              "# Official historical corporate actions/delistings — BLOCKED\n\n"
+              "KRX/KIND/FSC official source catalog verified, but no authenticated historical "
+              "corporate-action event ledger/ISIN-linked delisting universe acquired. "
+              "Do NOT call historical prices clean or certify real PnL.\n"
+              "Official key/data access and usage-right verification needed.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v07-official-event-verification-gate-manifest
+          path: ${{ runner.temp }}/official-evidence-gate.json
+          retention-days: 7
+
+  execution-integrity:
+    name: Cash/capacity/next-open execution checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Verify no hindsight fills, capacity, cash and missing exits
+        run: python -m pytest -q research/k_swing/tests/test_execution_prototype_v07.py
+      - name: Synthetic-only trade ledger demonstrations (not financial data)
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          from research.k_swing.tests.test_execution_prototype_v07 import inputs
+          from research.k_swing.execution_prototype_v07 import simulate
+          dates,bars,signals=inputs()
+          results=[]
+          for bps in (20,50,100,200):
+              _,r=simulate(bars,signals,dates,horizon=5,top_k=1,
+                           initial_cash_krw=10000,ticket_krw=1000,
+                           assumed_roundtrip_bps=bps)
+              results.append(r)
+          assert all(x["2026_holdout_touched"]==False for x in results)
+          outfile=Path(os.environ["RUNNER_TEMP"])/"synthetic-execution-prototype-summary.json"
+          outfile.write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(
+              "# Simulated fills and cost stress — synthetic ONLY\n\n"
+              "Tested T+1 opening-entry, T+H close-exit, cash limits, no hindsight "
+              "replacement, and unresolved delisting/exit behavior. "
+              "These prints are not real exchange fills or tax-inclusive backtests.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v07-synthetic-execution-scenarios
+          path: ${{ runner.temp }}/synthetic-execution-prototype-summary.json
+          retention-days: 7
+
+  block-bootstrap-history:
+    name: Real 2023 exploratory block/bootstrap/FDR
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Unit tests for BH q-values, blocked IC, no 2024-2026
+        run: python -m pytest -q research/k_swing/tests/test_statistical_stress_v07.py
+      - name: Fetch historical frozen 2019-22 ranks (aggregate-only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/v04-train"
+          gh run download 42871531605 --repo "${{ github.repository }}" \
+            --name "kswing-188-factor-2019-2023-aggregate-pilot" \
+            --dir "$RUNNER_TEMP/v04-train"
+          test -s "$RUNNER_TEMP/v04-train/factor_pilot_training_ranks.csv"
+      - name: Re-acquire quarantined real 2017-2023 bars privately
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2023 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v07-market"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2023 \
+            --data "$RUNNER_TEMP/kswing-v07-market"
+      - name: Evaluate 2023 reused factor IC with 20-session blocks, 30-way FDR
+        run: |
+          python -m research.k_swing.statistical_stress_v07 \
+            --data "$RUNNER_TEMP/kswing-v07-market" \
+            --training-ranks "$RUNNER_TEMP/v04-train/factor_pilot_training_ranks.csv" \
+            --output "$RUNNER_TEMP/v07-stats-safe" \
+            --modulus 16
+      - name: Summarize exploratory p-values, no confirmed alpha claim
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          import pandas as pd
+          folder=Path(os.environ['RUNNER_TEMP'])/'v07-stats-safe'
+          d=pd.read_csv(folder/'v07_exploratory_block_fdr.csv')
+          m=json.loads((folder/'v07_statistical_manifest.json').read_text())
+          lines=[
+              "# v0.7 exploratory 20-session block/FDR study", "",
+              f"Preselected factor/horizon pairs: **{len(d)}**",
+              f"Source sample ticker codes: **{m['symbols']}**",
+              "**2023 was already inspected — NOT independent confirmation.**",
+              "", "| Horizon | Factor | 2023 mean Rank IC | 95% block CI | Assumption-based BH q |",
+              "|---|---|---:|---|---:|"
+          ]
+          for _,r in d.sort_values("mean_oriented_ic",ascending=False).head(12).iterrows():
+              lines.append(f"| {int(r.horizon)}d | {r.factor} | {r.mean_oriented_ic:.4f} | "
+                           f"[{r.block_bootstrap_ci95_low:.4f}, {r.block_bootstrap_ci95_high:.4f}] | {r.bh_exploratory_q:.4f} |")
+          lines += ["","P/q values use a 20-session block sign-flip null (unverified symmetry). "
+                     "Not confirmation and not an investable strategy.",
+                    "No 2024–2026 data used, no raw OHLCV or ticker-level results published."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Remove raw and private security-level market data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v07-market/_raw" "$RUNNER_TEMP/kswing-v07-market/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v07-2023-exploratory-block-fdr-aggregates
+          path: ${{ runner.temp }}/v07-stats-safe/
+          retention-days: 7
