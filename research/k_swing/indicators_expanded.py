@@ -58,7 +58,7 @@ def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("Bars must have unique, sorted session index")
     if "unsafe_session" in bars:
         raw = bars["unsafe_session"].astype("string").str.lower()
-        if raw.dropna().isin(["true", "false", "1", "0"]).all() is False:
+        if not raw.dropna().isin(["true", "false", "1", "0"]).all():
             raise ValueError("unsafe_session must be a boolean field")
         risk = raw.isin(["true", "1"]) | raw.isna()
     else:
@@ -148,12 +148,15 @@ def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
     span_b_calc = _mid(h, l, 52)
     cloud_a_t = span_a_calc.shift(26)
     cloud_b_t = span_b_calc.shift(26)
+    both_cloud_spans_known = cloud_a_t.notna() & cloud_b_t.notna()
+    cloud_top = pd.concat([cloud_a_t, cloud_b_t], axis=1).max(axis=1).where(both_cloud_spans_known)
+    cloud_bottom = pd.concat([cloud_a_t, cloud_b_t], axis=1).min(axis=1).where(both_cloud_spans_known)
     add("ichi_tenkan_gap", _div(c, tenkan) - 1, "ichimoku", 9)
     add("ichi_kijun_gap", _div(c, kijun) - 1, "ichimoku", 26)
     add("ichi_tenkan_kijun_spread", _div(tenkan, kijun) - 1, "ichimoku", 26)
-    add("ichi_cloud_top_gap", _div(c, pd.concat([cloud_a_t, cloud_b_t], axis=1).max(axis=1)) - 1,
+    add("ichi_cloud_top_gap", _div(c, cloud_top) - 1,
         "ichimoku", 78, "Compare current close with cloud *plotted at current time*")
-    add("ichi_cloud_bottom_gap", _div(c, pd.concat([cloud_a_t, cloud_b_t], axis=1).min(axis=1)) - 1,
+    add("ichi_cloud_bottom_gap", _div(c, cloud_bottom) - 1,
         "ichimoku", 78)
     add("ichi_cloud_thickness", _div(cloud_a_t - cloud_b_t, c), "ichimoku", 78)
     add("ichi_span_a_projected_gap", _div(c, span_a_calc) - 1,
@@ -239,9 +242,10 @@ def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
         mfi = mfi.mask((neg_money == 0) & (pos_money > 0), 100)
         mfi = mfi.mask((neg_money == 0) & (pos_money == 0), 50)
         add(f"mfi_{n}", mfi, "volume", n + 1)
-    mean_dev = (typical - typical.rolling(20).mean()).abs().rolling(20).mean()
+    mean_dev = typical.rolling(20, min_periods=20).apply(
+        lambda a: float(np.mean(np.abs(a - np.mean(a)))), raw=True)
     add("cci_20", _div(typical - typical.rolling(20).mean(), .015 * mean_dev),
-        "momentum", 39)
+        "momentum", 20)
     add("cmo_14", 100 * _div(c.diff().clip(lower=0).rolling(14).sum() -
                            (-c.diff().clip(upper=0)).rolling(14).sum(),
                            c.diff().abs().rolling(14).sum()),
@@ -383,8 +387,11 @@ def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
     for n in (20, 60):
         add(f"return_skew_{n}", ret.rolling(n).skew(), "statistics", n + 1)
         add(f"return_kurt_{n}", ret.rolling(n).kurt(), "statistics", n + 1)
-    add("linreg_slope_20_pct", _div(c.diff(20), c.shift(20)) / 20,
-        "statistics", 21, "Simple 20-day average slope proxy; not least-squares LINEARREG_SLOPE")
+    linreg_slope20 = c.rolling(20).apply(
+        lambda a: float(np.dot(np.arange(20.) - 9.5, a - np.mean(a)) /
+                        np.dot(np.arange(20.) - 9.5, np.arange(20.) - 9.5)), raw=True)
+    add("linreg_slope_20_pct", _div(linreg_slope20, c), "statistics", 20,
+        "20-day OLS price slope normalized by current close")
     add("rolling_drawdown_20", _div(c, c.rolling(20).max()) - 1, "statistics", 20)
     add("rolling_drawdown_60", _div(c, c.rolling(60).max()) - 1, "statistics", 60)
 
