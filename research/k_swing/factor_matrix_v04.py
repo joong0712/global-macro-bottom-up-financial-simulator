@@ -30,7 +30,9 @@ def one_symbol_matrix(symbol_prices: pd.DataFrame, sessions: pd.DatetimeIndex,
     expanded = compute_indicators(c).add_prefix("ta__")
     labels = make_symbol_targets(c)
     out = pd.concat([baseline, expanded, labels], axis=1)
-    signal = (out.index >= pd.Timestamp(signal_start)) & (out.index <= pd.Timestamp(signal_end))
+    signal = ((out.index >= pd.Timestamp(signal_start)) &
+              (out.index <= pd.Timestamp(signal_end)) &
+              out.index.isin(symbol_prices["date"]))  # Never create rows for non-listed/missing days
     out = out.loc[signal].copy()
     out.insert(0, "date", out.index)
     out.insert(1, "ticker", symbol)
