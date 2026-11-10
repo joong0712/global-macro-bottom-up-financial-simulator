@@ -85,6 +85,14 @@ def simulate(bars: pd.DataFrame, signals: pd.DataFrame,
             cash-=debit
             positions[ticker]={**order,"entry_date":date,"entry_price":price,
                                "qty":qty,"debit":debit}
+        # Intermediate bar gaps and suspected corporate actions can make a held
+        # position unpriceable. NEVER carry it through and book a fictional exit.
+        for ticker,pos in list(positions.items()):
+            bar=bar_index.get((date,ticker))
+            if bar is None or bool(bar.unsafe_session) or pd.isna(bar.close) or float(bar.close)<=0:
+                unresolved=True
+                missed["unresolved_intra_holding_bar_or_corporate_action"]+=1
+                del positions[ticker]
         # At session close: exits scheduled using original signal date.
         for ticker,pos in list(positions.items()):
             if pos["exit_date"]!=date:

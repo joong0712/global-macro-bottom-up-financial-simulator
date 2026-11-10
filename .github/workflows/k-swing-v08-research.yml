@@ -1,0 +1,175 @@
+name: K-SWING v0.8 parallel integrity and train-only candidate research
+
+on:
+  push:
+    branches: [research/k-swing-v08]
+    paths:
+      - 'research/k_swing/*_v08.py'
+      - 'research/k_swing/tests/test_*_v08.py'
+      - 'research/k_swing/execution_prototype_v07.py'
+      - 'research/k_swing/tests/test_execution_prototype_v07.py'
+      - '.github/workflows/k-swing-v08-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical-issuer-coverage:
+    name: Official ISIN/date/identity coverage guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Reject incomplete or misdated official record histories
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_official_reconcile_v08.py \
+            research/k_swing/tests/test_official_events_v07.py \
+            research/k_swing/tests/test_fsc_snapshot_v07.py
+      - name: Record official-history hard blocker
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from research.k_swing.official_reconcile_v08 import reconcile_official_snapshots
+          import pandas as pd
+          p=pd.DataFrame({'date':['2022-01-04'], 'ticker':['005930'], 'close':[100]})
+          _,audit=reconcile_official_snapshots(p,None)
+          assert audit['missing_exact_day_isin_matches']==1
+          assert not audit['delisting_outcomes_verified']
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(
+            '# Historical ISIN / split / delisting coverage — BLOCKED\n\n'
+            'Official dated ISIN reference input not connected, and corporate-action '
+            'ledger/adjusted prices and ceased listings not independently certified.\n'
+            'Historical snapshots can be supplied only after approved access; '
+            'one snapshot never certifies a complete universe.\n'
+          )
+          PY
+
+  new-formula-training:
+    name: 12 formula candidates / 2019-22 TRAIN ONLY
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Tests for no future price, candidate math, frozen training splits
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_candidate_research_v08.py \
+            research/k_swing/tests/test_candidate_train_eval_v08.py
+      - name: Load only 2017-2022 training market data, privately
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2022 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v08-train"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2022 \
+            --data "$RUNNER_TEMP/kswing-v08-train"
+      - name: Evaluate 12 original math combinations without 2023+ labels
+        run: |
+          python -m research.k_swing.candidate_train_eval_v08 \
+            --data "$RUNNER_TEMP/kswing-v08-train" \
+            --output "$RUNNER_TEMP/v08-formula-safe-results" --modulus 16
+      - name: Aggregate only, label nonconfirmatory results
+        run: |
+          python - <<'PY'
+          import os,json
+          import pandas as pd
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'v08-formula-safe-results'
+          manifest=json.loads((root/'v08_candidate_research_manifest.json').read_text())
+          r=pd.read_csv(root/'v08_candidate_discovery_internal_summary.csv')
+          lines=[
+            '# v0.8 bounded 12 candidate formula training test', '',
+            f"Pairs (formula × horizon): {len(r)}",
+            f"Positive oriented IC across 2019-20 and 2021-22: **{manifest['positive_ic_both_internal_subperiods']}**",
+            '**2023, 2024, 2025, 2026 completely unopened in this candidate run.**', '',
+            '| Horizon | Candidate formula | 2019-20 oriented IC | 2021-22 internal IC |',
+            '|---:|---|---:|---:|'
+          ]
+          for _,x in r.sort_values('internal_2021_22_oriented_ic',ascending=False).groupby('horizon').head(5).iterrows():
+              lines.append(
+                  f"| {int(x.horizon)}d | {x.factor} | "
+                  f"{x.discovery_oriented_ic:.4f} | {x.internal_2021_22_oriented_ic:.4f} |")
+          lines += ['', 'These are deterministic formula prototypes and within-training associations. '
+                        'No official split/delisting certification or executable profit claim.',
+                   '2019-2022 has been inspected in previous baseline research; internal tests are not pristine OOS.']
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines)+'\n')
+          PY
+      - name: Delete raw and ticker-level private data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v08-train/_raw" "$RUNNER_TEMP/kswing-v08-train/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v08-training-only-12-formula-aggregates
+          path: ${{ runner.temp }}/v08-formula-safe-results/
+          retention-days: 7
+
+  actual-historical-bars-execution:
+    name: Real unadjusted 2023 OHLCV / cash/cost stress, NOT certified PnL
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Test no-hindsight entries and intermediate corporate actions
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_execution_prototype_v07.py \
+            research/k_swing/tests/test_real_execution_v08.py
+      - name: Download and screen 2017-2023 market bars (private)
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2023 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v08-trade"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2023 \
+            --data "$RUNNER_TEMP/kswing-v08-trade"
+      - name: Run 2023 overlapping position and 20-200bps cost sensitivity
+        run: |
+          python -m research.k_swing.real_execution_v08 \
+            --data "$RUNNER_TEMP/kswing-v08-trade" \
+            --output "$RUNNER_TEMP/v08-trade-safe-results" --modulus 16
+      - name: Record blocked/uncertified interpretation
+        run: |
+          python - <<'PY'
+          import os,json
+          import pandas as pd
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'v08-trade-safe-results'
+          meta=json.loads((root/'v08_provisional_execution_manifest.json').read_text())
+          r=pd.read_csv(root/'v08_real_bar_provisional_execution_scenarios.csv')
+          lines=[
+            '# v0.8 real bar execution stress — no certified exchange fills', '',
+            f"Scenarios: **{len(r)}**",
+            f"Blocked exit or uncertain corporate-action scenarios: **{int(meta['scenarios_with_unresolved_fills_or_actions'])}**",
+            '| Factor | Holding | K | Assumed bps | Status | Completed hypothetical trades |',
+            '|---|---:|---:|---:|---|---:|']
+          for _,x in r.sort_values(['factor','horizon','top_k','assumed_cost_bps']).iterrows():
+              if int(x.assumed_cost_bps)!=50: continue
+              lines.append(f"| {x.factor} | {int(x.horizon)} | {int(x.top_k)} | 50 | {x.scenario_status} | {int(x.completed_trades)} |")
+          lines += ['', '2023 was already inspected; code does NOT verify KRX limit fills, '
+                        'official transaction taxes, corporate-action-adjusted prices, or delisted security cash.',
+                        'Do not interpret any simulated return as actual investable alpha.']
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines)+'\n')
+          PY
+      - name: Delete raw and ticker-level private data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v08-trade/_raw" "$RUNNER_TEMP/kswing-v08-trade/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v08-2023-provisional-cash-execution
+          path: ${{ runner.temp }}/v08-trade-safe-results/
+          retention-days: 7

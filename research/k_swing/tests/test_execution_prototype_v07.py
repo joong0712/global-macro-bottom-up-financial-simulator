@@ -53,3 +53,15 @@ def test_cash_position_constraint():
                  initial_cash_krw=10000,ticket_krw=1000)
     assert len(a)==1
     assert r["skipped_reason_counts"]["position_limit_or_already_held"]==1
+
+
+def test_intermediate_split_or_missing_bar_blocks_entire_pnl():
+    dates,bars,signals=inputs()
+    # Price is present at entry and exit but a split-like event happened between.
+    bars.loc[bars.date.eq(dates[3])&bars.ticker.eq("000001"),
+             "unsafe_session"]=True
+    trades,report=simulate(bars,signals,dates,horizon=5,top_k=1)
+    assert len(trades)==0
+    assert report["status"].startswith("BLOCKED")
+    assert report["net_return_only_if_all_resolved"] is None
+    assert report["skipped_reason_counts"]["unresolved_intra_holding_bar_or_corporate_action"]==1
