@@ -43,6 +43,74 @@ def _roll(s, n, agg):
     return getattr(s.rolling(n, min_periods=n), agg)()
 
 
+def _wma(series, n):
+    weights = np.arange(1, n + 1, dtype=float)
+    return series.rolling(n, min_periods=n).apply(
+        lambda x: float(np.dot(x, weights) / weights.sum()), raw=True)
+
+
+def _psar(high, low, close, step=.02, cap=.2):
+    """Causal Wilder-style Parabolic SAR; state resets on missing inputs."""
+    hh, ll, cc = high.to_numpy(), low.to_numpy(), close.to_numpy()
+    out = np.full(len(high), np.nan)
+    trend_up, sar, ep, af = True, np.nan, np.nan, step
+    for i in range(1, len(hh)):
+        if not np.isfinite([hh[i], ll[i], cc[i], hh[i-1], ll[i-1], cc[i-1]]).all():
+            trend_up, sar, ep, af = True, np.nan, np.nan, step
+            continue
+        if not np.isfinite(sar):
+            trend_up = cc[i] >= cc[i-1]
+            sar = ll[i-1] if trend_up else hh[i-1]
+            ep = max(hh[i-1], hh[i]) if trend_up else min(ll[i-1], ll[i])
+            out[i] = sar
+            continue
+        candidate = sar + af * (ep - sar)
+        if trend_up:
+            candidate = min(candidate, ll[i-1], ll[i-2] if i >= 2 and np.isfinite(ll[i-2]) else ll[i-1])
+            if ll[i] < candidate:
+                trend_up, sar, ep, af = False, ep, ll[i], step
+            else:
+                sar = candidate
+                if hh[i] > ep:
+                    ep, af = hh[i], min(cap, af + step)
+        else:
+            candidate = max(candidate, hh[i-1], hh[i-2] if i >= 2 and np.isfinite(hh[i-2]) else hh[i-1])
+            if hh[i] > candidate:
+                trend_up, sar, ep, af = True, ep, hh[i], step
+            else:
+                sar = candidate
+                if ll[i] < ep:
+                    ep, af = ll[i], min(cap, af + step)
+        out[i] = sar
+    return pd.Series(out, index=high.index)
+
+
+def _supertrend(high, low, close, tr, period=10, multiplier=3.):
+    """Causal Supertrend using locked ATR bands and close-confirmed flips."""
+    atr = _wilder(tr, period)
+    half = (high + low) / 2
+    bu, bl = (half + multiplier * atr).to_numpy(), (half - multiplier * atr).to_numpy()
+    cc = close.to_numpy()
+    upper, lower, trend = np.full(len(close), np.nan), np.full(len(close), np.nan), np.full(len(close), np.nan)
+    is_up = False
+    for i in range(len(cc)):
+        if not np.isfinite([bu[i], bl[i], cc[i]]).all():
+            continue
+        if i == 0 or not np.isfinite([upper[i-1], lower[i-1], cc[i-1]]).all():
+            upper[i], lower[i], is_up = bu[i], bl[i], False
+        else:
+            upper[i] = bu[i] if bu[i] < upper[i-1] or cc[i-1] > upper[i-1] else upper[i-1]
+            lower[i] = bl[i] if bl[i] > lower[i-1] or cc[i-1] < lower[i-1] else lower[i-1]
+            if is_up and cc[i] < lower[i]:
+                is_up = False
+            elif not is_up and cc[i] > upper[i]:
+                is_up = True
+        trend[i] = 1 if is_up else -1
+    trend_s = pd.Series(trend, index=close.index)
+    band = pd.Series(np.where(trend > 0, lower, upper), index=close.index)
+    return band, trend_s
+
+
 def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
     """Calculate feature panel for ONE ticker, indexed by complete market sessions.
 
@@ -382,6 +450,24 @@ def compute_indicators(bars: pd.DataFrame) -> pd.DataFrame:
         ((c < o) & (c.shift(1) > o.shift(1)) & (o >= c.shift(1)) & (c <= o.shift(1))).astype(float),
         "candlestick", 2)
     add("opening_gap_pct", _div(o, prev_c) - 1, "candlestick", 2)
+
+    # Additional popular trend overlays (path dependent, always causal)
+    hma20 = _wma(2 * _wma(c, 10) - _wma(c, 20), 4)
+    add("hma_gap_20", _div(c, hma20) - 1, "trend", 23)
+    parabolic = _psar(h, l, c)
+    add("psar_gap", _div(c - parabolic, c), "trend", 120,
+        "Wilder-style recursive stop-and-reverse; verify against TA-Lib convention")
+    add("psar_bullish", (c > parabolic).where(parabolic.notna()).astype(float),
+        "trend", 120)
+    st_line, st_direction = _supertrend(h, l, c, tr, period=10, multiplier=3.)
+    add("supertrend_10_3_gap", _div(c - st_line, c), "trend", 120,
+        "ATR10/multiplier3 with prior locked bands, close-confirmed transitions")
+    add("supertrend_10_3_direction", st_direction, "trend", 120)
+    stoch14 = _div(c - l.rolling(14).min(), h.rolling(14).max() - l.rolling(14).min()) * 100
+    stoch14d = stoch14.rolling(3).mean()
+    add("kdj_j_14_3", 3 * stoch14 - 2 * stoch14d, "momentum", 16)
+    add("elder_bull_13_pct", _div(h - _ema(c, 13), c), "momentum", 40)
+    add("elder_bear_13_pct", _div(l - _ema(c, 13), c), "momentum", 40)
 
     # Distribution (do not substitute for beta/sector/foreign flows)
     for n in (20, 60):

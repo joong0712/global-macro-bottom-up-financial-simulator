@@ -76,3 +76,18 @@ def test_missing_session_does_not_invent_price():
 def test_invalid_bar_order_rejected():
     with pytest.raises(ValueError, match="unique, sorted"):
         compute_indicators(synthetic().iloc[::-1])
+
+
+def test_psar_supertrend_and_hma_are_causal():
+    p = synthetic()
+    original = compute_indicators(p)
+    for name in ("psar_gap", "psar_bullish", "supertrend_10_3_gap",
+                 "supertrend_10_3_direction", "hma_gap_20", "kdj_j_14_3"):
+        assert name in original
+        assert np.isfinite(original.iloc[-1][name])
+    revised = p.copy()
+    revised.loc[p.index[350]:, ["open", "high", "low", "close", "turnover"]] *= 1.3
+    altered = compute_indicators(revised)
+    for name in ("psar_gap", "supertrend_10_3_gap", "hma_gap_20"):
+        pd.testing.assert_series_equal(original.loc[:p.index[349], name],
+                                       altered.loc[:p.index[349], name])
