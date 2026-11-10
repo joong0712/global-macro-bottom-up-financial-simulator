@@ -107,3 +107,26 @@ def test_ambiguous_same_timestamp_filing_rejected():
                            "value": [1, 2]})
     with pytest.raises(ValueError, match="ambiguous"):
         join_dart_fundamentals(s, events, ["value"])
+
+
+def test_mixed_utc_and_korean_release_formats_are_normalized():
+    signals = pd.DataFrame({"date": ["2024-01-04", "2024-01-04", "2024-01-05", "2024-01-05"],
+                            "ticker": ["000001", "000002", "000001", "000002"]})
+    events = pd.DataFrame({
+        "ticker": ["000001", "000002"],
+        "available_at": ["2024-01-04T00:00:00Z", "2024-01-04T16:01:00+09:00"],
+        "flow": [100, 200],
+    })
+    out = join_investor_flows(signals, events, ["flow"])
+    assert out.flow.iloc[0] == 100
+    assert pd.isna(out.flow.iloc[1])
+    assert out.flow.iloc[2] == 100
+    assert out.flow.iloc[3] == 200
+
+
+def test_pit_join_does_not_silently_replace_existing_signal_field():
+    signals = pd.DataFrame({"date": ["2024-01-04"], "ticker": ["000001"], "revenue": [100]})
+    filings = pd.DataFrame({"ticker": ["000001"],
+                            "available_at": ["2024-01-03T12:00:00+09:00"], "revenue": [200]})
+    with pytest.raises(ValueError, match="already exist"):
+        join_dart_fundamentals(signals, filings, ["revenue"])
