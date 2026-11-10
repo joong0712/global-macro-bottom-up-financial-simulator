@@ -1,0 +1,84 @@
+name: K-SWING v0.4 broad-factor pilot (2019-2023 only)
+
+on:
+  push:
+    branches: [research/k-swing-v04]
+    paths:
+      - "research/k_swing/factor_pilot_v04.py"
+      - "research/k_swing/tests/test_factor_pilot_v04.py"
+      - ".github/workflows/k-swing-v04-pilot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sampled-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Test pilot, factor formulas and time leakage defenses
+        run: python -m pytest -q research/k_swing/tests
+      - name: Download 2017-2023 market data to ephemeral runner
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2023 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v04"
+      - name: Screen corporate action candidates, calendar and gaps
+        run: |
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2023 --data "$RUNNER_TEMP/kswing-v04"
+      - name: Run all technical factors (train 2019-2022; exploratory 2023 validation)
+        run: |
+          python -m research.k_swing.factor_pilot_v04 \
+            --data "$RUNNER_TEMP/kswing-v04" \
+            --output "$RUNNER_TEMP/kswing-v04/_pilot_reports" --modulus 8
+      - name: Publish aggregate per-factor pilot results only
+        run: |
+          mkdir -p ./kswing-factor-pilot-public-aggregates
+          cp "$RUNNER_TEMP/kswing-v04/_pilot_reports/"* ./kswing-factor-pilot-public-aggregates/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          import pandas as pd
+          root=Path("./kswing-factor-pilot-public-aggregates")
+          meta=json.loads((root/"factor_pilot_summary.json").read_text())
+          df=pd.read_csv(root/"factor_pilot_aggregates.csv")
+          q=df.loc[df.split.eq("validation_2023_reused") & df.top5_from_train].sort_values(
+              ["horizon","mean_oriented_rank_ic"], ascending=[True,False])
+          lines=[
+              "# K-SWING 188-factor sampled research pilot", "",
+              f"Source rows (selected signal stocks): {meta['signal_rows']:,}",
+              f"Hashed security sample: {meta['sampled_tickers_with_signal_rows']}",
+              f"Factors: {meta['features']}",
+              "2026 untouched confirmation period: YES",
+              "",
+              "### Training-selected factor validation in 2023 (reused exploratory period)",
+              "| Horizon | Factor | Oriented Rank IC | Top-10 gross excess |",
+              "|---|---|---:|---:|",
+          ]
+          for _, row in q.iterrows():
+              lines.append(
+                  f"| {int(row['horizon'])}d | {row['factor']} | "
+                  f"{row['mean_oriented_rank_ic']:.4f} | "
+                  f"{100*row['avg_top10_excess_gross']:.3f}%p |"
+              )
+          lines.extend(["", "No security picks or raw market prices were published.",
+                        "This hash sample is not a full-market analysis; 2023 has previously been inspected for legacy factors.",
+                        "Overlapping forward returns are NOT real portfolio profit or validated alpha."])
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Delete raw and individual security data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v04/_raw" "$RUNNER_TEMP/kswing-v04/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-188-factor-2019-2023-aggregate-pilot
+          path: ./kswing-factor-pilot-public-aggregates/
+          retention-days: 7
