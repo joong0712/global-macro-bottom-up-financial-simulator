@@ -14,7 +14,7 @@ permissions:
 jobs:
   historical-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,11 +28,17 @@ jobs:
         run: python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2026 --keep-raw --output "$RUNNER_TEMP/kswing-marketdata"
       - name: Compare XKRX calendar and screen suspicious price events
         run: python -m research.k_swing.quality_audit --start-year 2017 --end-year 2026 --data "$RUNNER_TEMP/kswing-marketdata"
+      - name: Evaluate 18 indicators on real 2019-2025 prices (held-out test)
+        run: |
+          python -m research.k_swing.factor_real_experiment --data "$RUNNER_TEMP/kswing-marketdata" --output "$RUNNER_TEMP/kswing-marketdata/factor-study"
       - name: Publish ONLY aggregate QA (no ticker/date price records)
         run: |
           mkdir -p ./kswing-aggregate-only
           cp "$RUNNER_TEMP/kswing-marketdata/marcap_audit_summary.json" ./kswing-aggregate-only/
           cp "$RUNNER_TEMP/kswing-marketdata/market_structure_quality.json" ./kswing-aggregate-only/
+          cp "$RUNNER_TEMP/kswing-marketdata/factor-study/kswing_factor_results_v03.csv" ./kswing-aggregate-only/
+          cp "$RUNNER_TEMP/kswing-marketdata/factor-study/kswing_training_selection_v03.csv" ./kswing-aggregate-only/
+          cp "$RUNNER_TEMP/kswing-marketdata/factor-study/kswing_research_summary_v03.json" ./kswing-aggregate-only/
           python - <<'PY'
           import json, os
           from pathlib import Path
@@ -43,6 +49,13 @@ jobs:
           for y in years:
               lines.append(f"|{y['year']}|{y['quarantined_rows']}|{y['suspected_price_discontinuities']}|{y['suspected_share_count_changes']}|{y['security_name_changes']}|{y['observation_gaps']}|")
           lines.extend(['', 'Candidates require official confirmation; no adjusted-return or delisting claims.'])
+          study = __import__('pandas').read_csv('kswing-aggregate-only/kswing_factor_results_v03.csv')
+          selected = study[(study['split'] == 'test') & (study['preselected_using_train_only'] == True)]
+          lines.extend(['', '## v0.3 out-of-sample factor study (unadjusted, non-executable)', '', '| Horizon | Factor (train-picked) | Test signal days | Test mean Rank IC | Test Top-10 excess gross |', '|---|---|---:|---:|---:|'])
+          for _, f in selected.sort_values(['horizon','mean_daily_rank_ic'], ascending=[True,False]).iterrows():
+              lines.append(f"| {int(f['horizon'])}d | {f['factor']} | {int(f['signal_days'])} | {f['mean_daily_rank_ic']:.4f} | {f['topk_avg_excess_gross']*100:.3f}% |")
+          lines.append('')
+          lines.append('Selected from 2019–22 train only. 2023 validation; 2024–25 held-out test. No verified split-adjusted returns, portfolio fills, or evidence of tradable alpha.')
           Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines)+'\n')
           PY
       - name: Remove private prices and metadata
