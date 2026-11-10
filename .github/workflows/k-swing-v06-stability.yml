@@ -1,0 +1,86 @@
+name: K-SWING v0.6 redundancy and annual stability independent job
+
+on:
+  push:
+    branches: [research/k-swing-v06]
+    paths:
+      - "research/k_swing/redundancy_stability_v06.py"
+      - "research/k_swing/tests/test_redundancy_stability_v06.py"
+      - ".github/workflows/k-swing-v06-stability.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  stability-and-clusters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Validate correlation math and no-holdout gates
+        run: python -m pytest -q research/k_swing/tests/test_redundancy_stability_v06.py
+      - name: Retrieve previous TRAINING ranks only (not securities)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/previous-training"
+          gh run download 42871531605 --repo "${{ github.repository }}" \
+            --name "kswing-188-factor-2019-2023-aggregate-pilot" \
+            --dir "$RUNNER_TEMP/previous-training"
+          test -s "$RUNNER_TEMP/previous-training/factor_pilot_training_ranks.csv"
+      - name: Acquire and quarantine real 2017-2023 historical market data privately
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2023 --keep-raw \
+            --output "$RUNNER_TEMP/k-swing-v06"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2023 \
+            --data "$RUNNER_TEMP/k-swing-v06"
+      - name: Training 2019-22 factor clusters plus 2019-23 annual Rank IC
+        run: |
+          python -m research.k_swing.redundancy_stability_v06 \
+            --data "$RUNNER_TEMP/k-swing-v06" \
+            --training-ranks "$RUNNER_TEMP/previous-training/factor_pilot_training_ranks.csv" \
+            --output "$RUNNER_TEMP/k-swing-v06-aggregates" \
+            --modulus 16
+      - name: Summarize duplicate clusters and yearly stability
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          import pandas as pd
+          folder=Path(os.environ["RUNNER_TEMP"])/"k-swing-v06-aggregates"
+          report=json.loads((folder/"v06_redundancy_stability_manifest.json").read_text())
+          clusters=pd.read_csv(folder/"training_only_feature_clusters.csv")
+          annual=pd.read_csv(folder/"training_selected_yearly_stability.csv")
+          cfg=report["cluster_stats"]
+          lines=["# K-SWING v0.6 training-only correlated feature clustering", "",
+                 f"2019-22 sample: **{report['sample_ticker_codes']}** ticker codes",
+                 f"188 variant columns collapsed to **{cfg['cluster_count']}** connected clusters at abs corr ≥ {cfg['threshold_abs_within_date_rank_corr']:.2f}",
+                 f"Potential redundant variants: **{cfg['redundant_variants']}**",
+                 f"Training-only (2019–22) dates used in redundancy: **{cfg['sampled_training_dates']}**",
+                 "", "## Annual Rank IC stability (2019–23, 2023 reused exploratory)", "",
+                 "| Horizon | Factor | Positive train years / observed | 2023 oriented IC |",
+                 "|---|---|---|---:|"]
+          for _, r in annual.sort_values(["horizon","mean_2019_22_yearly_ic"],ascending=[True,False]).groupby("horizon").head(7).iterrows():
+              lines.append(f"| {int(r.horizon)}d | {r.factor} | {int(r.positive_train_years)}/{int(r.train_years_with_evidence)} | {r.exploratory_2023_ic:.4f} |")
+          lines += ["", "Correlations measured only from training 2019-22 using within-day ranks.",
+                    "2023 was already inspected; not an untouched test. No 2024–2026 inputs read.",
+                    "Indicator clusters and annual sign counts do not establish prediction significance or portfolio alpha."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Remove private raw and per-security price data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/k-swing-v06/_raw" "$RUNNER_TEMP/k-swing-v06/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: k-swing-v06-training-clusters-yearly-aggregates
+          path: ${{ runner.temp }}/k-swing-v06-aggregates/
+          retention-days: 7
