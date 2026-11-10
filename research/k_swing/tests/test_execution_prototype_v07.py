@@ -65,3 +65,28 @@ def test_intermediate_split_or_missing_bar_blocks_entire_pnl():
     assert report["status"].startswith("BLOCKED")
     assert report["net_return_only_if_all_resolved"] is None
     assert report["skipped_reason_counts"]["unresolved_intra_holding_bar_or_corporate_action"]==1
+
+
+
+def test_marked_equity_captures_unrealized_drawdown_between_entry_and_exit():
+    dates,bars,signals=inputs()
+    # One held security falls before recovery; the original simulator only
+    # recorded completed trade returns and could hide pathwise risk.
+    bars.loc[bars.date.eq(dates[3])&bars.ticker.eq("000001"),"close"]=80.
+    _,r=simulate(bars,signals,dates,horizon=5,top_k=1,
+                 initial_cash_krw=10000,ticket_krw=1000,
+                 assumed_roundtrip_bps=0)
+    assert r["status"].startswith("HYPOTHETICAL")
+    assert r["max_mark_to_market_drawdown_if_resolved"] < -.01
+    assert r["worst_session_marked_nav_change_if_resolved"] < -.01
+
+
+def test_unresolved_split_invalidates_nav_and_terminal_profit():
+    dates,bars,signals=inputs()
+    bars.loc[bars.date.eq(dates[4])&bars.ticker.eq("000001"),
+             "unsafe_session"]=True
+    _,r=simulate(bars,signals,dates,horizon=5,top_k=1,
+                 initial_cash_krw=10000,ticket_krw=1000)
+    assert r["status"].startswith("BLOCKED")
+    assert r["max_mark_to_market_drawdown_if_resolved"] is None
+    assert r["net_return_only_if_all_resolved"] is None

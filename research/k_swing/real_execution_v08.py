@@ -76,6 +76,8 @@ def run(data_dir:Path,output_dir:Path,modulus:int=16) -> dict:
                         "completed_trades":out["completed_trades"],
                         "reported_terminal_cash_krw":out["end_cash_only_if_all_resolved"],
                         "reported_hypothetical_return":out["net_return_only_if_all_resolved"],
+                        "provisional_marked_max_drawdown":out["max_mark_to_market_drawdown_if_resolved"],
+                        "provisional_worst_daily_marked_nav":out["worst_session_marked_nav_change_if_resolved"],
                         "any_unresolved_exit":out["status"].startswith("BLOCKED"),
                         **{f"skipped_{k}":v for k,v in out["skipped_reason_counts"].items()}
                     })
