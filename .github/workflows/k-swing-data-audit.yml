@@ -1,0 +1,60 @@
+name: K-SWING KRX-derived data acquisition audit
+
+on:
+  push:
+    branches: [research/k-swing-v01]
+    paths:
+      - 'research/k_swing/marcap_ingest.py'
+      - 'research/k_swing/tests/test_marcap_ingest.py'
+      - 'research/k_swing/requirements.txt'
+      - '.github/workflows/k-swing-data-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install research dependencies
+        run: |
+          python -m pip install -r research/k_swing/requirements.txt
+      - name: Validate data-normalization and research code
+        run: python -m pytest -q research/k_swing/tests
+      - name: Fetch and validate 2017-2026 prices in private runner
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2026 --output "$RUNNER_TEMP/kswing-marketdata"
+      - name: Report aggregate counts (no prices)
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path(os.environ['RUNNER_TEMP']) / 'kswing-marketdata' / 'marcap_audit_summary.json'
+          d = json.loads(p.read_text(encoding='utf-8'))
+          lines = [
+              '# K-SWING data acquisition QA',
+              '',
+              f"Source ref: {d['source_ref'][:12]}",
+              f"Total rows: **{d['total_rows']:,}**",
+              f"Observed sessions: **{d['total_sessions']:,}**",
+              '',
+              '| Year | Normalized observations | Symbols | Sessions | Bad rows |',
+              '|---|---:|---:|---:|---:|',
+          ]
+          for y in d['years']:
+              lines.append(f"| {y['year']} | {y['normalized_rows']:,} | {y['unique_tickers']:,} | {y['unique_sessions']:,} | {y['dropped_quality_rows']:,} |")
+          lines.append('')
+          lines.append('Only aggregate QA metrics are published. No raw OHLCV is redistributed.')
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines)+'\n', encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-aggregate-data-quality
+          path: ${{ runner.temp }}/kswing-marketdata/marcap_audit_summary.json
+          retention-days: 7
