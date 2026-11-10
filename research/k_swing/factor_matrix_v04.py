@@ -43,7 +43,8 @@ def private_matrix(input_files: list[Path], calendar_file: Path, output_dir: Pat
                    signal_start: str = "2019-01-01",
                    signal_end: str = "2025-12-31",
                    batch_tickers: int = 25,
-                   allow_2026_confirmation: bool = False) -> dict:
+                   allow_2026_confirmation: bool = False,
+                   smoke_tickers: int | None = None) -> dict:
     if batch_tickers < 1:
         raise ValueError("batch_tickers must be positive")
     if pd.Timestamp(signal_end) < pd.Timestamp(signal_start):
@@ -61,6 +62,11 @@ def private_matrix(input_files: list[Path], calendar_file: Path, output_dir: Pat
     frame = pd.concat(inputs, ignore_index=True)
     if frame.duplicated(["date", "ticker"]).any():
         raise ValueError("Same ticker and trading day duplicated across annual files")
+    if smoke_tickers is not None:
+        if smoke_tickers < 1:
+            raise ValueError("smoke_tickers must be positive")
+        selected = sorted(frame.ticker.dropna().unique().tolist())[:smoke_tickers]
+        frame = frame.loc[frame.ticker.isin(selected)].copy()
     sessions = load_calendar(calendar_file, frame)
     output_dir.mkdir(parents=True, exist_ok=True)
     segments, batch, nrows = [], [], 0
@@ -99,6 +105,7 @@ def private_matrix(input_files: list[Path], calendar_file: Path, output_dir: Pat
         "new_indicator_count": sum(k.startswith("ta__") for k in feature_names),
         "parts": segments,
         "research_only": True,
+        "smoke_test_subset_not_for_inference": smoke_tickers is not None,
         "corporate_actions_adjusted_and_verified": False,
         "ordinary_share_historical_membership_verified": False,
         "holdout_2026_opened": bool(pd.Timestamp(signal_end).year >= 2026),
@@ -128,11 +135,12 @@ def main(argv=None):
     p.add_argument("--signal-start", default="2019-01-01")
     p.add_argument("--signal-end", default="2025-12-31")
     p.add_argument("--batch-tickers", type=int, default=25)
+    p.add_argument("--smoke-tickers", type=int, help="Deterministic code-ordered small subset; engineering only")
     p.add_argument("--allow-2026-confirmation", action="store_true",
                    help="Explicitly open the confirmation holdout. Do not use while tuning.")
     a = p.parse_args(argv)
     private_matrix(a.prices, a.calendar, a.output, a.signal_start, a.signal_end,
-                   a.batch_tickers, a.allow_2026_confirmation)
+                   a.batch_tickers, a.allow_2026_confirmation, a.smoke_tickers)
 
 
 if __name__ == "__main__":
