@@ -8,6 +8,7 @@ HORIZONS = (5, 10)
 def make_symbol_targets(frame: pd.DataFrame, horizons: tuple[int, ...] = HORIZONS) -> pd.DataFrame:
     """A full exchange-session indexed frame is required; never skip missing sessions."""
     result = pd.DataFrame(index=frame.index)
+    risk = frame["unsafe_session"].fillna(False).astype(bool) if "unsafe_session" in frame else pd.Series(False, index=frame.index)
     for horizon in horizons:
         if horizon < 1:
             raise ValueError("보유 기간은 양수여야 합니다.")
@@ -16,10 +17,12 @@ def make_symbol_targets(frame: pd.DataFrame, horizons: tuple[int, ...] = HORIZON
         forward_high = pd.concat([frame["high"].shift(-i) for i in range(1, horizon + 1)], axis=1)
         forward_low = pd.concat([frame["low"].shift(-i) for i in range(1, horizon + 1)], axis=1)
         forward_volume = pd.concat([frame["volume"].shift(-i) for i in range(1, horizon + 1)], axis=1)
+        future_risk = pd.concat([risk.shift(-i) for i in range(1, horizon + 1)], axis=1)
         valid = (
             forward_high.notna().all(axis=1) &
             forward_low.notna().all(axis=1) &
             forward_volume.gt(0).all(axis=1) &
+            ~future_risk.fillna(True).any(axis=1) & ~risk &
             entry.gt(0) & exit_close.gt(0)
         )
         result[f"entry_date_{horizon}"] = pd.Series(frame.index, index=frame.index).shift(-1)

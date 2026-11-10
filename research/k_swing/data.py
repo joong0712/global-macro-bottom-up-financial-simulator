@@ -14,7 +14,8 @@ def validate_prices(df: pd.DataFrame) -> pd.DataFrame:
     missing = sorted(set(REQUIRED) - set(df.columns))
     if missing:
         raise ValueError(f"필수 열 누락: {', '.join(missing)}")
-    out = df.loc[:, REQUIRED].copy()
+    cols = list(REQUIRED) + (["unsafe_session"] if "unsafe_session" in df.columns else [])
+    out = df.loc[:, cols].copy()
     ticker = out["ticker"].astype("string").str.strip()
     if ticker.isna().any() or not ticker.str.fullmatch(r"\d{1,6}").fillna(False).all():
         raise ValueError("종목코드는 1~6자리 숫자여야 합니다.")
@@ -26,6 +27,11 @@ def validate_prices(df: pd.DataFrame) -> pd.DataFrame:
         out[field] = pd.to_numeric(out[field], errors="raise")
         if out[field].isna().any():
             raise ValueError(f"{field} 값에 결측치가 있습니다.")
+    if "unsafe_session" in out:
+        text = out["unsafe_session"].astype("string").str.lower()
+        if text.isna().any() or not text.isin(["true", "false", "0", "1"]).all():
+            raise ValueError("unsafe_session must contain only true/false")
+        out["unsafe_session"] = text.isin(["true", "1"]).astype(bool)
     if (out[["open", "high", "low", "close"]] <= 0).any().any():
         raise ValueError("OHLC 가격은 양수여야 합니다.")
     if (out[["volume", "turnover"]] < 0).any().any():

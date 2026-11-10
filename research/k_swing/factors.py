@@ -65,4 +65,8 @@ def compute_symbol_factors(ohlcv: pd.DataFrame) -> pd.DataFrame:
     flow = np.sign(changes) * v
     out["obv_flow_10"] = _div(flow.rolling(10, min_periods=10).sum(), v.rolling(10, min_periods=10).sum())
     out["breakout_20"] = c.div(h.shift(1).rolling(20, min_periods=20).max()).sub(1)
-    return out.replace([np.inf, -np.inf], np.nan).where(v.gt(0) & t.gt(0), np.nan)
+    result = out.replace([np.inf, -np.inf], np.nan).where(v.gt(0) & t.gt(0), np.nan)
+    if "unsafe_session" in f:
+        recent_event = f["unsafe_session"].fillna(False).astype(bool).rolling(26, min_periods=1).max().astype(bool)
+        result = result.mask(recent_event, np.nan)
+    return result
