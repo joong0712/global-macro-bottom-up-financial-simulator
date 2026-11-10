@@ -1,0 +1,105 @@
+name: K-SWING v0.4 indicator library CI
+
+on:
+  push:
+    branches: [research/k-swing-v04]
+    paths:
+      - "research/k_swing/**"
+      - ".github/workflows/k-swing-v04-indicators.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  indicator-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install isolated research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: All unit tests (includes Ichimoku no-look-ahead)
+        run: python -m pytest -q research/k_swing/tests
+      - name: Summarize full feature catalog on deterministic synthetic bars
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import pandas as pd
+          from research.k_swing.tests.test_indicators_expanded import synthetic
+          from research.k_swing.indicators_expanded import compute_indicators, catalog_frame
+          x = compute_indicators(synthetic(650))
+          catalog = catalog_frame()
+          assert x.shape[1] >= 120
+          assert set(catalog.name) == set(x.columns)
+          assert not x.iloc[-1].isna().all()
+          lines = [
+              "# K-SWING v0.4 Technical Indicator QA", "",
+              f"Total computed indicators: **{x.shape[1]}**",
+              f"Rows: **{len(x)}** (deterministic synthetic, not actual market data)",
+              f"Non-null features on last date: **{x.iloc[-1].notna().sum()}**", "",
+              "| Family | Features |", "|---|---:|",
+          ]
+          lines.extend(f"| {family} | {count} |"
+                       for family, count in catalog.groupby('family').size().items())
+          lines.extend(["", "Synthetic feature tests do NOT establish market prediction performance.",
+                        "Ichimoku projected cloud is separate from the current displayed cloud; no Chikou look-ahead."])
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print("features=", len(x.columns), "by_family=", catalog.groupby("family").size().to_dict())
+          PY
+
+      - name: Real market OHLCV smoke test (2024-2025, no raw-data publication)
+        run: |
+          python - <<'PY'
+          import json, os, tempfile
+          from pathlib import Path
+          import pandas as pd
+          from research.k_swing.marcap_ingest import download, normalize_marcap
+          from research.k_swing.indicators_expanded import compute_indicators, catalog_frame
+          with tempfile.TemporaryDirectory() as td:
+              tmp = Path(td)
+              panels = []
+              for year in (2024, 2025):
+                  raw = tmp / f"marcap-{year}.parquet"
+                  download(year, raw)
+                  prices, _ = normalize_marcap(pd.read_parquet(raw), year)
+                  panels.append(prices)
+                  raw.unlink(missing_ok=True)
+              data = pd.concat(panels, ignore_index=True)
+              dates = pd.DatetimeIndex(sorted(data.date.unique()))
+              counts = data.groupby("ticker").date.nunique()
+              eligible = counts[counts >= 420].index[:8]
+              if len(eligible) < 5:
+                  raise RuntimeError("Insufficient continuous 2024-2025 historical symbols for smoke test")
+              obs = 0
+              feature_count = 0
+              last_nonnull = []
+              for code in eligible:
+                  symbol = data.loc[data.ticker.eq(code)].drop(columns="ticker").set_index("date").reindex(dates)
+                  features = compute_indicators(symbol)
+                  feature_count = len(features.columns)
+                  obs += len(features)
+                  last_nonnull.append(int(features.iloc[-1].notna().sum()))
+              if feature_count < 170 or max(last_nonnull) < 100:
+                  raise AssertionError("Expanded feature library underproduced on real source bars")
+              lines = [
+                  "", "## 2024-2025 real KRX-derived bar calculation smoke test", "",
+                  f"Unadjusted OHLCV source: FinanceData/marcap pinned snapshot.",
+                  f"Example anonymized ticker count: **{len(eligible)}**",
+                  f"Bars processed (including market calendar gaps): **{obs}**",
+                  f"Total computed features: **{feature_count}**",
+                  f"Non-null features at last signal date (range): **{min(last_nonnull)}-{max(last_nonnull)}**",
+                  "",
+                  "Formula execution only. No factor returns, backtests, stock recommendations or raw market prices published.",
+              ]
+              with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as fh:
+                  fh.write("\n".join(lines) + "\n")
+              print(json.dumps({"status":"real_ohlcv_feature_smoke_pass",
+                                "anonymous_symbols":len(eligible),
+                                "feature_count":feature_count,"bars_examined":obs,
+                                "nonnull_range":[min(last_nonnull),max(last_nonnull)]}))
+          PY

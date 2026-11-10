@@ -1,0 +1,60 @@
+name: K-SWING v0.4 extended indicator safety tests
+
+on:
+  push:
+    branches: [research/k-swing-v04]
+    paths:
+      - 'research/k_swing/indicators_expanded.py'
+      - 'research/k_swing/tests/test_indicators_expanded.py'
+      - '.github/workflows/k-swing-expanded-indicators.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  factor-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install standalone dependencies
+        run: |
+          python -m pip install "numpy>=1.26,<3" "pandas>=2.2,<3" "pytest>=8,<10"
+      - name: Test expanded indicator formulas and absence of look-ahead
+        run: |
+          python -m pytest -q research/k_swing/tests/test_indicators_expanded.py
+      - name: Publish indicator catalog summary
+        run: |
+          python - <<'PY'
+          import numpy as np, pandas as pd, os
+          from pathlib import Path
+          from research.k_swing.indicators_expanded import compute_indicators, catalog_frame
+          n=450
+          d=pd.bdate_range("2023-01-02",periods=n)
+          x=np.arange(n,dtype=float)
+          close=10000 + x * 2 + np.sin(x/8) * 120
+          op=close+np.sin(x/11)*25
+          vol=100000 + x*100
+          frame=pd.DataFrame({"open":op,"close":close,
+            "high":np.maximum(op,close)*1.01,
+            "low":np.minimum(op,close)*0.99,
+            "volume":vol,
+            "turnover":vol*close},index=d)
+          out=compute_indicators(frame)
+          catalog=catalog_frame()
+          assert len(out.columns)>=120
+          assert out.columns.is_unique
+          assert set(out.columns)==set(catalog.name)
+          lines=['# K-SWING v0.4 indicator catalog', '',
+                 f'**Causal calculated numeric features:** {len(catalog)}',
+                 '', '| Family | Feature variants |', '|---|---:|']
+          for k,v in catalog.groupby("family").size().items():
+            lines.append(f'| {k} | {v} |')
+          lines += ['', 'No Chikou backplot, centered ZigZag or future-dependent dates.',
+                    'This CI checks synthetic inputs; it does not claim live-market predictive results.']
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
