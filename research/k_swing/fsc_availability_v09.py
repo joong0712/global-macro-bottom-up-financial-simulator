@@ -68,7 +68,6 @@ def fsc_snapshot_signal_gate(
         e[["date","ticker","isinCd","first_public_at_utc",
            "historical_vintage_observed_at_utc","_scheduled_utc"]],
         on=["date","ticker"],how="left",validate="one_to_one")
-    )
     valid=(
         matched["isinCd"].notna()&
         matched["_scheduled_utc"].notna()&
