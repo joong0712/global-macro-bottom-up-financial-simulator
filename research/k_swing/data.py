@@ -16,7 +16,7 @@ def validate_prices(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"필수 열 누락: {', '.join(missing)}")
     out = df.loc[:, REQUIRED].copy()
     ticker = out["ticker"].astype("string").str.strip()
-    if ticker.isna().any() or ~ticker.str.fullmatch(r"\d{1,6}").fillna(False).all():
+    if ticker.isna().any() or not ticker.str.fullmatch(r"\d{1,6}").fillna(False).all():
         raise ValueError("종목코드는 1~6자리 숫자여야 합니다.")
     out["ticker"] = ticker.str.zfill(6)
     out["date"] = pd.to_datetime(out["date"], errors="raise").dt.normalize()
