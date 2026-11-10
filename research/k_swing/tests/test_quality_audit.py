@@ -83,3 +83,23 @@ def test_source_metadata_market_filter():
     })
     metadata = marcap_metadata(raw, 2024)
     assert set(metadata.ticker) == {"005930", "000660"}
+
+
+def test_reported_official_closure_explanations():
+    observed = pd.DatetimeIndex(["2026-06-02", "2026-06-04", "2026-07-16", "2026-07-20"])
+    ref = pd.DatetimeIndex(["2026-06-02", "2026-06-03", "2026-06-04",
+                            "2026-07-16", "2026-07-17", "2026-07-20"])
+    report = compare_calendars(observed, ref)
+    assert set(report["reference_only_explained_by_reported_krx_closures"]) == {"2026-06-03", "2026-07-17"}
+    assert report["reference_only_still_unexplained"] == []
+
+
+def test_history_preserves_absent_tickers_across_years():
+    prices, metadata, dates = example()
+    first, state, _ = screen_year(prices.iloc[:20], metadata.iloc[:20], dates)
+    another_price = prices.iloc[20:21].copy()
+    another_meta = metadata.iloc[20:21].copy()
+    another_price["ticker"] = "000002"
+    another_meta["ticker"] = "000002"
+    _, state, _ = screen_year(another_price, another_meta, dates, state)
+    assert set(state.ticker) == {"000001", "000002"}

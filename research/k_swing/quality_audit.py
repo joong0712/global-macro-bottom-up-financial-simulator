@@ -15,14 +15,30 @@ def xkrx_sessions(start, end) -> pd.DatetimeIndex:
     return pd.DatetimeIndex(cal.sessions_in_range(cal.first_session, cal.last_session)).tz_localize(None)
 
 
+# Public KRX announcements (reported 2026-05-20) for ad-hoc closures not
+# represented in some XKRX holiday-library releases. This is an explicit,
+# auditable *explanation*, not a silent rewrite of the exchange calendar.
+KNOWN_2026_KRX_CLOSURES = {
+    "2026-06-03": "2026 local-election-day closure",
+    "2026-07-17": "2026 Constitution Day closure",
+}
+KRX_CLOSURE_SOURCE = "https://www.yna.co.kr/amp/view/AKR20260520064200008"
+
+
 def compare_calendars(observed, reference) -> dict:
     observed = pd.DatetimeIndex(observed).normalize().unique().sort_values()
     reference = pd.DatetimeIndex(reference).normalize().unique().sort_values()
+    reference_only = [str(x.date()) for x in reference.difference(observed)]
+    explained = [x for x in reference_only if x in KNOWN_2026_KRX_CLOSURES]
+    unexplained = [x for x in reference_only if x not in KNOWN_2026_KRX_CLOSURES]
     return {
         "reference": "XKRX in exchange_calendars (independent, non-official)",
         "observed_sessions": int(len(observed)),
         "xkrx_sessions": int(len(reference)),
-        "reference_only_dates": [str(x.date()) for x in reference.difference(observed)],
+        "reference_only_dates": reference_only,
+        "reference_only_explained_by_reported_krx_closures": explained,
+        "reference_only_still_unexplained": unexplained,
+        "closure_announcement_source": KRX_CLOSURE_SOURCE,
         "observed_only_dates": [str(x.date()) for x in observed.difference(reference)],
         "matches": observed.equals(reference),
         "warning": "Mismatch could represent source missing sessions OR XKRX not reflecting an ad-hoc holiday. Confirm with KRX.",
@@ -101,6 +117,12 @@ def screen_year(prices: pd.DataFrame, metadata: pd.DataFrame,
     }
     tail = current.groupby("ticker", sort=False).tail(1)[
         ["date", "ticker", "close", "shares", "security_name", "market"]].copy()
+    # Preserve tickers absent in this year, or old delistings disappear from
+    # inactive/universe analysis and later reappearances lose identity history.
+    if prev_state is not None and not prev_state.empty:
+        tail = (pd.concat([prev_state, tail], ignore_index=True)
+                .sort_values(["ticker", "date"], kind="stable")
+                .groupby("ticker", sort=False).tail(1).reset_index(drop=True))
     screened = current[["date", "ticker", "open", "high", "low", "close", "volume", "turnover", "unsafe_session"]]
     return screened.sort_values(["date", "ticker"]), tail, summary
 
