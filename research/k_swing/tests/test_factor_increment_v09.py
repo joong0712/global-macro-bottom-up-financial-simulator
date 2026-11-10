@@ -35,7 +35,7 @@ def test_degenerate_baseline_never_claims_independent_partial_ic():
 
 
 def test_stronger_candidate_oriented_same_stock_comparison():
-    dates=pd.bdate_range("2019-01-02","2022-12-28",freq="5B")
+    dates=pd.bdate_range("2019-01-02","2022-12-28",freq="B")
     rows=[]
     for date in dates:
         sign=1
