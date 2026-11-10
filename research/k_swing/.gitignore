@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+research_panel.csv
+factor_metrics.csv
+train_factor_ranking.csv
+summary.json
+_local_data/
+_raw/
+_private/
+marcap-*.parquet
+kswing_prices_*.csv.gz

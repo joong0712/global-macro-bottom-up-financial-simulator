@@ -1,0 +1,5 @@
+numpy>=1.26,<3
+pandas>=2.2,<3
+pytest>=8,<10
+pyarrow>=18,<24
+exchange-calendars>=4.11,<5
