@@ -46,3 +46,12 @@ python -m research.k_swing.controls_v05 --data research/k_swing/_local_data --ou
 **v0.9** preregistered frozen hypothesis and one untouched 2026 confirmation. Only then consider paper trading, not automatic money orders.
 
 Existing Streamlit app and production modules are excluded from every phase. Keep this PR draft.
+## v0.6 official data acquisition plan — verified public entry points
+
+1. [KRX OPEN API service catalog](https://openapi.krx.co.kr/contents/OPP/INFO/service/OPPINFO004.cmd): stock daily trades, stock reference data, KOSPI/KOSDAQ indices (official catalog advertises series from 2010; approval/authentication required). Verify precisely which issuer/type/industry fields are historically reliable before downloading.
+2. [KRX KIND](https://kind.krx.co.kr/disclosure/details.do?method=searchDetailsMain): official market announcements with categories covering split/rights reference price, trading suspension, delisting, new/relisted securities and sector changes. Requires a date- and security-identifier-aware historical join; existence of the page does not confer machine-download rights.
+3. [KRX Data Marketplace](https://data.krx.co.kr/): investor-by-security transactions and market-sector classifications. Publication time matters: no signal at 15:30 KST may use releases published after the close.
+4. [Open DART](https://opendart.fss.or.kr/): official financial statement filings. DART public list API `rcept_dt` is a **date**, not a reliable hour-minute public timestamp. Until timestamp evidence is obtained, conservatively make such disclosures available no earlier than the **next session**, rather than inventing a same-day public time.
+
+Data acquisition must use authorized APIs, preserve raw source checksums and point-in-time corrections, and must not silently backfill today's issuer/sector classifications into previous years.
+
