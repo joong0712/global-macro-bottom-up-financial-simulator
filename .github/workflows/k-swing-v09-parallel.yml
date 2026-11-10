@@ -1,0 +1,177 @@
+name: K-SWING v0.9 parallel incremental IC and portfolio-risk study
+
+on:
+  push:
+    branches: [research/k-swing-v09]
+    paths:
+      - 'research/k_swing/*_v09.py'
+      - 'research/k_swing/tests/test_*_v09.py'
+      - 'research/k_swing/execution_prototype_v07.py'
+      - 'research/k_swing/tests/test_execution_prototype_v07.py'
+      - 'research/k_swing/real_execution_v08.py'
+      - '.github/workflows/k-swing-v09-parallel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fsc-pit-policy:
+    name: Official ISIN publication/vintage availability safeguards
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Check no historical-vintage leakage or same-day use
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_fsc_availability_v09.py \
+            research/k_swing/tests/test_official_reconcile_v08.py
+      - name: Document fail-closed official reference status
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(
+            "# FSC official reference T-close data audit\n\n"
+            "Dates as-of T do not establish actual public availability at T. "
+            "FSC next-business-session 13:00 availability threshold and "
+            "historical-vintage proof are required. "
+            "No approved authenticated full ISIN/event/delisting history connected.\n\n"
+            "**Historical split/delisting/ordinary-share coverage remains NOT VERIFIED.**\n"
+          )
+          PY
+
+  incremental-factor-history:
+    name: Same-date same-stock 12 candidate vs ATR/Parkinson partial IC
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Validate paired subperiod training and no 2023-26
+        run: python -m pytest -q research/k_swing/tests/test_factor_increment_v09.py
+      - name: Download 2017-2022 ONLY, private research runner
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2022 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v09-train"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2022 \
+            --data "$RUNNER_TEMP/kswing-v09-train"
+      - name: Run same-stock and market-day paired incremental IC with 20-session blocks
+        run: |
+          python -m research.k_swing.factor_increment_v09 \
+            --data "$RUNNER_TEMP/kswing-v09-train" \
+            --output "$RUNNER_TEMP/v09-incremental-safe" --modulus 16
+      - name: Publish only aggregate factor comparisons and methodological limits
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          import pandas as pd
+          root=Path(os.environ["RUNNER_TEMP"])/"v09-incremental-safe"
+          a=pd.read_csv(root/"v09_same_stock_incremental_ic.csv")
+          manifest=json.loads((root/"v09_incremental_manifest.json").read_text())
+          internal=a.loc[a.period.eq("internal_2021_22")]
+          s=[
+              "# K-SWING 12 candidate expressions vs two volatility baselines", "",
+              "**All comparisons use exactly the same stock/date/target sample.**",
+              "**2019-2022 was previously inspected: this is NOT independent confirmation.**",
+              "**No 2023-2026 price or forward-return records opened in this job.**", "",
+              "| Horizon | Formula | Candidate IC | Train-selected baseline IC | Matched IC delta | Partial IC (ATR, Parkinson controlled) |",
+              "|---:|---|---:|---:|---:|---:|"]
+          for _,r in internal.sort_values(["horizon","paired_mean_ic_improvement"],
+                                         ascending=[True,False]).groupby("horizon").head(7).iterrows():
+              s.append(
+                 f"| {int(r.horizon)}d | {r.candidate} | "
+                 f"{r.candidate_oriented_rank_ic:.4f} | {r.baseline_oriented_rank_ic_same_names:.4f} | "
+                 f"{r.paired_mean_ic_improvement:+.4f} | "
+                 f"{r.partial_ic_given_both_baselines:.4f} |"
+              )
+          s.extend(["", f"Factor×horizon pairs: {manifest['factor_horizon_tests']}",
+                    "Partial Rank IC is NOT causal or tradeable incremental profit.",
+                    "At-risk missing forward outcomes can create selection bias, even on a matched sample.",
+                    "20-session circular block interval is descriptive; no adjustment for reused historical selection.",
+                    "Official ISIN and corporate-action/delist data are still missing."])
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(s)+"\n")
+          PY
+      - name: Purge private price and ticker-level data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v09-train/_raw" "$RUNNER_TEMP/kswing-v09-train/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v09-candidate-vs-vol-baselines-training-only
+          path: ${{ runner.temp }}/v09-incremental-safe/
+          retention-days: 7
+
+  actual-portfolio-risk-history:
+    name: 2023 real OHLCV hypothetical equity curve and max drawdown
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Test cash accounting and intermediate unrealized drawdowns
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_execution_prototype_v07.py \
+            research/k_swing/tests/test_real_execution_v08.py
+      - name: Acquire private 2017-23 KRX-derived historical OHLCV
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2023 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v09-risk"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2023 \
+            --data "$RUNNER_TEMP/kswing-v09-risk"
+      - name: Run precommitted cash/fee scenarios including held-share MDD
+        run: |
+          python -m research.k_swing.real_execution_v08 \
+            --data "$RUNNER_TEMP/kswing-v09-risk" \
+            --output "$RUNNER_TEMP/v09-risk-safe" --modulus 16
+      - name: Summarize provisional risk without live-fill claims
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          import pandas as pd
+          root=Path(os.environ["RUNNER_TEMP"])/"v09-risk-safe"
+          d=pd.read_csv(root/"v08_real_bar_provisional_execution_scenarios.csv")
+          m=json.loads((root/"v08_provisional_execution_manifest.json").read_text())
+          z=d.loc[d.assumed_cost_bps.eq(50)].sort_values(["factor","horizon","top_k"])
+          lines=[
+            "# v0.9 marked-to-market cash/account risk stress", "",
+            f"Precommitted scenarios: {len(d)}; flagged unresolved: {m['scenarios_with_unresolved_fills_or_actions']}", "",
+            "| Factor | H | K | Hypothetical cash return | Marked MDD | Worst marked session | Status |",
+            "|---|---:|---:|---:|---:|---:|---|"]
+          for _,r in z.iterrows():
+              if r.any_unresolved_exit:
+                  ret=mdd=daily="BLOCKED"
+              else:
+                  ret=f"{r.reported_hypothetical_return*100:+.2f}%"
+                  mdd=f"{r.provisional_marked_max_drawdown*100:.2f}%"
+                  daily=f"{r.provisional_worst_daily_marked_nav*100:.2f}%"
+              lines.append(f"| {r.factor} | {int(r.horizon)} | {int(r.top_k)} | "
+                           f"{ret} | {mdd} | {daily} | {r.scenario_status} |")
+          lines += ["", "MDD includes intermediate open holdings using historical close prints. "
+                        "It is still NOT an exchange executable equity curve.",
+                    "Missing split/delist/tax reference and true auction fills block any verified PnL claim.",
+                    "2023 is reused exploratory; 2026 holdout has not been opened."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Purge private price and ticker-level data
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v09-risk/_raw" "$RUNNER_TEMP/kswing-v09-risk/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v09-marked-portfolio-risk-provisional-aggregates
+          path: ${{ runner.temp }}/v09-risk-safe/
+          retention-days: 7
