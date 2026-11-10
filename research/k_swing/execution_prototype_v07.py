@@ -55,6 +55,7 @@ def simulate(bars: pd.DataFrame, signals: pd.DataFrame,
     fee=assumed_roundtrip_bps/20000
     cash=float(initial_cash_krw)
     records=[]
+    nav_marks=[]  # PRIVATE per-session mark-to-market, never a public price series.
     missed=defaultdict(int)
     unresolved=False
     seen_signal_dates=set(s.date)
@@ -114,6 +115,20 @@ def simulate(bars: pd.DataFrame, signals: pd.DataFrame,
                 "net_trade_return":proceeds/pos["debit"]-1,
             })
             del positions[ticker]
+        # Mark the whole cash + held-share account at each session close,
+        # including temporary unrealized drawdowns between entry and exit.
+        # Do not claim any equity path after a missing/delisted position.
+        if not unresolved:
+            value=cash
+            for held_ticker,held in positions.items():
+                close_bar=bar_index.get((date,held_ticker))
+                if close_bar is None or bool(close_bar.unsafe_session) or pd.isna(close_bar.close):
+                    unresolved=True
+                    missed["missing_mark_to_market_close"]+=1
+                    break
+                value+=held["qty"]*float(close_bar.close)
+            if not unresolved:
+                nav_marks.append(float(value))
         if date not in seen_signal_dates:
             continue
         # At T close, rank without forward returns or future trade availability.
@@ -133,6 +148,15 @@ def simulate(bars: pd.DataFrame, signals: pd.DataFrame,
     if positions or any(pending.values()):
         unresolved=True
         missed["unfinished_positions"]+=len(positions)
+    if not unresolved and nav_marks:
+        marks=np.asarray(nav_marks,float)
+        prev=np.r_[float(initial_cash_krw),marks[:-1]]
+        peaks=np.maximum.accumulate(np.r_[float(initial_cash_krw),marks])[1:]
+        mdd=float((marks/peaks-1).min())
+        worst_daily=float((marks/prev-1).min())
+        max_marked_equity=float(marks.max())
+    else:
+        mdd=worst_daily=max_marked_equity=None
     summary={
         "status":("HYPOTHETICAL_OPEN_CLOSE_PRINTS_ONLY" if not unresolved else
                   "BLOCKED_UNRESOLVED_EXIT_OR_DELISTING"),
@@ -141,6 +165,10 @@ def simulate(bars: pd.DataFrame, signals: pd.DataFrame,
         "end_cash_only_if_all_resolved":cash if not unresolved else None,
         "net_return_only_if_all_resolved":cash/initial_cash_krw-1 if not unresolved else None,
         "assumed_roundtrip_bps":assumed_roundtrip_bps,
+        "max_mark_to_market_drawdown_if_resolved":mdd,
+        "worst_session_marked_nav_change_if_resolved":worst_daily,
+        "max_marked_equity_if_resolved":max_marked_equity,
+        "marks_are_unadjusted_close_prints_not_executable":True,
         "skipped_reason_counts":dict(missed),
         "actual_broker_fees_taxes_verified":False,
         "open_close_auction_fills_verified":False,
