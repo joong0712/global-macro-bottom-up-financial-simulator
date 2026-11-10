@@ -1,0 +1,62 @@
+name: K-SWING v0.4 real-data feature integration smoke
+
+on:
+  push:
+    branches: [research/k-swing-v04]
+    paths:
+      - 'research/k_swing/factor_matrix_v04.py'
+      - '.github/workflows/k-swing-v04-market-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical-integration-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install isolated research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download and audit 2021-2022 source prices privately
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2021 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/kswing-data"
+          python -m research.k_swing.quality_audit --start-year 2021 --end-year 2022 --data "$RUNNER_TEMP/kswing-data"
+      - name: Compute all 188 variables on twelve real tickers (engineering only)
+        run: |
+          python -m research.k_swing.factor_matrix_v04 \
+            --prices "$RUNNER_TEMP/kswing-data/_private/kswing_screened_2021.csv.gz" "$RUNNER_TEMP/kswing-data/_private/kswing_screened_2022.csv.gz" \
+            --calendar "$RUNNER_TEMP/kswing-data/_private/krx_observed_sessions.csv" \
+            --output "$RUNNER_TEMP/kswing-data/_private/smoke" \
+            --signal-start 2022-05-02 --signal-end 2022-10-31 --smoke-tickers 12
+      - name: Publish non-security-level matrix QA only
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          base=Path(os.environ["RUNNER_TEMP"]) / "kswing-data"
+          q=json.loads((base/"_private/smoke/factor_matrix_manifest.json").read_text())
+          assert q["indicator_count"] >= 188
+          assert q["old_indicator_count"] == 18
+          assert q["new_indicator_count"] == 170
+          assert q["signal_rows"] > 0
+          assert not q["holdout_2026_opened"]
+          assert q["smoke_test_subset_not_for_inference"]
+          lines=["# K-SWING v0.4 real-market integration QA", "",
+                 "**Engineering smoke test only, NOT a predictive-return or backtest result**",
+                 f"Number of technical variables built: **{q['indicator_count']}**",
+                 f"Old baseline: **{q['old_indicator_count']}**, expanded: **{q['new_indicator_count']}**",
+                 f"Price observations converted to feature rows: **{q['signal_rows']:,}**",
+                 f"Partition files created privately: **{len(q['parts'])}**",
+                 "Data: 2022 engineering-only sample, fixed code-ordered tickers.",
+                 "2026 holdout stayed locked. No raw or per-security price data uploaded."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          print("matrix_indicators=",q["indicator_count"],"matrix_rows=",q["signal_rows"])
+          PY
+      - name: Remove private input files (never upload)
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-data"
