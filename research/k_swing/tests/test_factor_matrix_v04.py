@@ -71,3 +71,13 @@ def test_private_matrix_writes_partitions_and_manifest(tmp_path):
     assert manifest["holdout_2026_opened"] is False
     s = pd.read_parquet(tmp_path / "features" / manifest["parts"][0])
     assert s["ticker"].nunique() == 2
+
+
+def test_delisted_or_missing_symbol_dates_are_not_fabricated():
+    prices, dates = sample()
+    ticker = prices.loc[prices.ticker.eq("000001")].copy()
+    removed = dates[-15:]
+    ticker = ticker.loc[~ticker.date.isin(removed)]
+    out = one_symbol_matrix(ticker, dates, str(dates[-40].date()), str(dates[-1].date()))
+    assert not out.date.isin(removed).any()
+    assert len(out) == 25
