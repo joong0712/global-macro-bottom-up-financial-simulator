@@ -21,6 +21,8 @@ def point_in_time_join(signals: pd.DataFrame, events: pd.DataFrame,
         raise ValueError("reserved requested field")
     if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", cutoff_kst):
         raise ValueError("invalid Korean market cutoff")
+    if set(fields) & set(signals.columns):
+        raise ValueError("requested output fields already exist in signals")
     s, e = signals.copy(), events[[key, "available_at", *fields]].copy()
     if s[["date", key]].isna().any().any() or e[[key, "available_at"]].isna().any().any():
         raise ValueError("missing date, key or availability")
@@ -30,7 +32,7 @@ def point_in_time_join(signals: pd.DataFrame, events: pd.DataFrame,
     if not all(isinstance(x, str) and re.search(r"(?:Z|[+-]\d\d:\d\d)$", x)
                for x in e["available_at"]):
         raise ValueError("timezone-aware ISO available_at required")
-    e["_public_utc"] = pd.to_datetime(e["available_at"], utc=True, errors="raise")
+    e["_public_utc"] = pd.to_datetime(e["available_at"], utc=True, format="mixed", errors="raise")
     if e.duplicated([key, "_public_utc"]).any():
         raise ValueError("ambiguous releases with identical publication time")
     s["_order"] = range(len(s))
