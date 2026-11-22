@@ -35,9 +35,13 @@ def run(data_dir: Path, output_dir: Path, *, entry: str, exit_mode: str,
     for split, first, last in SPLITS:
         scoped = selected.loc[selected.date.between(first, last)]
         for horizon in (5, 10):
+            final_signal_idx = dates.searchsorted(last, side="right") - 1
+            exposure_end = dates[min(final_signal_idx + horizon, len(dates) - 1)]
             r = simulate_exit_policy(
                 bars, scoped, dates,
                 exit_mode=exit_mode, horizon=horizon,
+                exposure_window_start=first,
+                exposure_window_end=exposure_end,
                 initial_cash_krw=100_000_000,
                 ticket_krw=5_000_000, max_positions=10,
                 top_k=10, stop_pct=.03, take_pct=.08,
