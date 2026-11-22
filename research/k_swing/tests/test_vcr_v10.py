@@ -53,6 +53,15 @@ def test_unsafe_or_missing_history_blocks_signal():
     assert not symbol_signal_flags(df, dates).iloc[-1].vcr
 
 
+def test_oldest_bb_lookback_unsafe_bar_blocks_vcr():
+    dates, df = fixture()
+    # The first OHLCV bar needed by the oldest T-120 Bollinger width
+    # is T-139. Even if prices exist, an unsafe action on that date
+    # must invalidate the 140-session source history.
+    df.loc[df.index[-140], "unsafe_session"] = True
+    assert not symbol_signal_flags(df, dates).iloc[-1].vcr
+
+
 def test_volume_ratio_and_turnover_filters():
     dates, df = fixture()
     df.loc[df.index[-1], "volume"] = 1_700_000
