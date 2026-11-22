@@ -18,10 +18,11 @@ def simulate_brackets(bars: pd.DataFrame, signals: pd.DataFrame,
                       top_k: int = 10, initial_cash_krw: int = 100_000_000,
                       ticket_krw: int = 5_000_000, max_positions: int = 10,
                       assumed_roundtrip_bps: float = 50.,
+                      entry_delay_sessions: int = 1,
                       max_signal_turnover_fraction: float = .005) -> dict:
     """Return aggregate-only engineering results. Never publish stock fill traces.
 
-    T close score -> T+1 opening print (no trade if unavailable). T+H last
+    T close score -> T+entry_delay opening print (no trade if unavailable). T+delay+H-1 last
     close, earlier stop/take based on held-session OHLC. At an overnight gap,
     use opening price, not a fictional stop fill. Intrabar both hit -> stop.
     """
@@ -31,7 +32,8 @@ def simulate_brackets(bars: pd.DataFrame, signals: pd.DataFrame,
     if not required_b.issubset(bars) or not required_s.issubset(signals):
         raise ValueError("Missing screened bars or signals")
     if (horizon < 1 or top_k < 1 or max_positions < 1 or initial_cash_krw <= 0
-            or ticket_krw <= 0 or not (0 < stop_pct < 1) or take_pct <= 0
+            or ticket_krw <= 0 or entry_delay_sessions not in (1, 2)
+            or not (0 < stop_pct < 1) or take_pct <= 0
             or assumed_roundtrip_bps < 0 or not 0 < max_signal_turnover_fraction <= 1):
         raise ValueError("Invalid capital/exit/fee configuration")
     b, sig = bars.copy(), signals.copy()
@@ -123,7 +125,7 @@ def simulate_brackets(bars: pd.DataFrame, signals: pd.DataFrame,
         if day not in signal_days:
             continue
         i = rank[day]
-        if i + horizon >= len(dates):
+        if i + entry_delay_sessions + horizon - 1 >= len(dates):
             missed["insufficient_future_calendar_for_exit"] += 1
             continue
         candidates = sig.loc[sig.date.eq(day)].sort_values(
@@ -132,8 +134,8 @@ def simulate_brackets(bars: pd.DataFrame, signals: pd.DataFrame,
             if row.turnover < ticket_krw / max_signal_turnover_fraction:
                 missed["signal_day_liquidity_fail"] += 1
                 continue
-            queue[dates[i + 1]].append({"ticker": str(row.ticker),
-                                         "last_day": dates[i + horizon]})
+            queue[dates[i + entry_delay_sessions]].append({"ticker": str(row.ticker),
+                                         "last_day": dates[i + entry_delay_sessions + horizon - 1]})
     if positions or any(queue.values()):
         blocked = True
         missed["unfinished_position"] += len(positions)
@@ -147,6 +149,7 @@ def simulate_brackets(bars: pd.DataFrame, signals: pd.DataFrame,
     return {
         "status": "BLOCKED_UNRESOLVED_POSITION" if blocked else "HYPOTHETICAL_OHLC_ONLY",
         "completed_trades": closed,
+        "entry_delay_sessions": entry_delay_sessions,
         "assumed_roundtrip_bps": assumed_roundtrip_bps,
         "hypothetical_net_return_if_resolved": net,
         "hypothetical_marked_mdd_if_resolved": mdd,
