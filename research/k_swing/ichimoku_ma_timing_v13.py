@@ -89,9 +89,13 @@ def symbol_timing_candidates(symbol: pd.DataFrame,
                   & m60.gt(m60.shift(5)))
     confluence = cloud_break & m20.gt(m60) & c.gt(m20)
     vcr = symbol_signal_flags(symbol, dates, VCRConfig())
+    highs = symbol.copy()
+    highs.date = pd.to_datetime(highs.date).dt.normalize()
+    prior_high252 = (highs.set_index("date").sort_index().reindex(dates)
+                     .high.shift(1).rolling(252, min_periods=252).max())
     vcr_base = (pd.Series(vcr.vcr.to_numpy(dtype=bool), index=dates)
                 & c.div(c.shift(60)).ge(1.10)
-                & c.ge(m60))  # T-close above SMA60
+                & c.div(prior_high252.where(prior_high252.gt(0))).ge(.80))
     masks = {
         "ichi_cloud_breakout": cloud_break,
         "ichi_kijun_reclaim": kij_reclaim,
