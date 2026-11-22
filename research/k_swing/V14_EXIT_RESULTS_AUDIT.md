@@ -6,8 +6,26 @@
 - 8 strategy-entry/exit arms, each with 2019–20 / 2021–22 periods and max 5/10 held sessions = **32 total simulated account scenarios**. No rule passed net return >0 in BOTH periods.
 - The prior v1.3 baseline 5/10-day returns reproduced to 0.01 percentage point with the new accounting engine.
 - Brokerage, actual fills, official corporate actions/delisting, and effective historic taxes remain unverified. These are not investable PnL statistics.
-- IMPORTANT: The first run's **mean invested fraction** measured across full 2017–2022 history (including periods outside the evaluated signal window), unintentionally understating active capital exposure. The simulation formula and experimental period windows were fixed on this branch with test coverage. **All PnL/MDD and trade-return values below are from the first CI run and are unaffected by that correction; only exposure values should come from a successful corrected CI rerun.**
+- CORRECTED EXPOSURE VALIDATION: [all 9 jobs successful after the exposure-window correction](https://github.com/joong0712/global-macro-bottom-up-financial-simulator/actions/runs/45056246696). Inspected all 8 new aggregate JSON artifacts; account PnL, MDD and mean trade returns remained unchanged while mean invested fractions now apply to each experiment's signal period plus exit buffer. These historical daily means quantify *time in positions*, not verified actual capital execution.
 - No 2023–2026 holdout was opened.
+
+
+## Corrected invested-capital exposure (verified rerun)
+
+Selected baseline scenarios from GitHub Actions #45056246696. **Percentages here are percentages of the cash account, NOT 0.568 = 56.8%.**
+
+| Entry | H sessions | Period | Account net return | Mean invested fraction | Mean net closed trade |
+|---|---:|---|---:|---:|---:|
+| Ichimoku + SMA | 5 | 2019-20 | -0.393% | 0.568% | -0.225% |
+| Ichimoku + SMA | 5 | 2021-22 | -1.062% | 0.491% | -0.712% |
+| Ichimoku + SMA | 10 | 2019-20 | -0.278% | 0.807% | -0.162% |
+| Ichimoku + SMA | 10 | 2021-22 | -1.112% | 0.559% | -0.773% |
+| VCR + trend | 5 | 2019-20 | -3.566% | 0.127% | -2.389% |
+| VCR + trend | 5 | 2021-22 | -0.039% | 0.459% | -0.015% |
+| VCR + trend | 10 | 2019-20 | -3.566% | 0.126% | -2.389% |
+| VCR + trend | 10 | 2021-22 | -0.390% | 0.625% | -0.206% |
+
+Critically, both entry methods invest **far less than 1% of capital on a typical calendar day**; near-flat NAV cannot be interpreted as low-risk positive alpha. Their per-trade means are negative in the selected periods. These are preliminary engineering estimates, not official trade execution records.
 
 ## All 32 hypothetical net portfolio returns (%)
 
