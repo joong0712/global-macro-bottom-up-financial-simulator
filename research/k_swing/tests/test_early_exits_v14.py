@@ -88,6 +88,24 @@ def test_unsafe_bar_blocks_all_return_claim():
     assert result["hypothetical_net_return_if_resolved"] is None
 
 
+def test_exposure_window_excludes_warmup_cash_but_does_not_change_return():
+    d, b = bars_fixture()
+    signals = signal_at(d)
+    all_dates = simulate_exit_policy(b, signals, d, exit_mode="baseline", horizon=5)
+    within = simulate_exit_policy(
+        b, signals, d, exit_mode="baseline", horizon=5,
+        exposure_window_start=d[300], exposure_window_end=d[320])
+    assert within["hypothetical_net_return_if_resolved"] == pytest.approx(
+        all_dates["hypothetical_net_return_if_resolved"])
+    assert within["mean_daily_invested_fraction_if_resolved"] > (
+        all_dates["mean_daily_invested_fraction_if_resolved"])
+    assert within["exposure_window_start"] == str(d[300].date())
+    with pytest.raises(ValueError, match="Both"):
+        simulate_exit_policy(
+            b, signals, d, exit_mode="baseline", horizon=5,
+            exposure_window_start=d[300])
+
+
 def test_tomorrows_candle_never_changes_yesterdays_exit_signal():
     d, b = bars_fixture()
     b.loc[b.index[-2], ["open", "high", "low", "close"]] = [
