@@ -91,7 +91,7 @@ def symbol_timing_candidates(symbol: pd.DataFrame,
     vcr = symbol_signal_flags(symbol, dates, VCRConfig())
     vcr_base = (pd.Series(vcr.vcr.to_numpy(dtype=bool), index=dates)
                 & c.div(c.shift(60)).ge(1.10)
-                & c.ge(x.cloud_bottom.mul(0).add(m60)))  # T-close above SMA60
+                & c.ge(m60))  # T-close above SMA60
     masks = {
         "ichi_cloud_breakout": cloud_break,
         "ichi_kijun_reclaim": kij_reclaim,
