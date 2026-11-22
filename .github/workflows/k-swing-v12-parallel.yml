@@ -38,7 +38,10 @@ jobs:
       - run: python -m pip install -r research/k_swing/requirements.txt
       - name: Pin LightGBM major version for ranker only
         if: matrix.track == 'ranker'
-        run: python -m pip install 'lightgbm>=4.5,<5'
+        run: python -m pip install 'scikit-learn>=1.5,<2' 'lightgbm>=4.5,<5'
+      - name: Verify LightGBM scikit-learn adapter before expensive data audit
+        if: matrix.track == 'ranker'
+        run: python -c "from lightgbm import LGBMRegressor; LGBMRegressor(n_estimators=1)"
       - name: Download audited 2017-2022 OHLCV to ephemeral private workspace
         run: |
           python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/kswing-v12"
