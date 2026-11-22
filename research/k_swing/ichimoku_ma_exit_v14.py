@@ -44,6 +44,8 @@ def simulate_exit_policy(
     top_k: int = 10, stop_pct: float = .03, take_pct: float = .08,
     assumed_roundtrip_bps: float = 50.,
     max_signal_turnover_fraction: float = .005,
+    exposure_window_start: pd.Timestamp | None = None,
+    exposure_window_end: pd.Timestamp | None = None,
 ) -> dict:
     """OHLC cash ledger with same entry/stop/take rules as v1.3.
 
@@ -65,6 +67,15 @@ def simulate_exit_policy(
     required_s = {"date", "ticker", "score", "turnover"}
     if not required_b.issubset(bars) or not required_s.issubset(signals):
         raise ValueError("Complete screened stock bars and T signals required")
+    if ((exposure_window_start is None) != (exposure_window_end is None)):
+        raise ValueError("Both exposure window boundaries are required")
+    if exposure_window_start is not None:
+        exposure_window_start = pd.Timestamp(exposure_window_start).normalize()
+        exposure_window_end = pd.Timestamp(exposure_window_end).normalize()
+        if (exposure_window_start > exposure_window_end
+                or exposure_window_start > dates[-1]
+                or exposure_window_end < dates[0]):
+            raise ValueError("Invalid exposure measurement interval")
     b, sig = bars.copy(), signals.copy()
     for data in (b, sig):
         data["date"] = pd.to_datetime(data.date).dt.normalize()
@@ -189,9 +200,11 @@ def simulate_exit_policy(
             if not blocked:
                 account_nav = cash + exposure_value
                 nav.append(account_nav)
-                daily_exposures.append(
-                    exposure_value / account_nav if account_nav > 0 else np.nan
-                )
+                if (exposure_window_start is None or
+                        exposure_window_start <= day <= exposure_window_end):
+                    daily_exposures.append(
+                        exposure_value / account_nav if account_nav > 0 else np.nan
+                    )
 
         if day not in set(sig.date):
             continue
@@ -219,7 +232,8 @@ def simulate_exit_policy(
         peaks = np.maximum.accumulate(np.r_[float(initial_cash_krw), a])[1:]
         net_return = float(a[-1] / initial_cash_krw - 1)
         mdd = float((a / peaks - 1).min())
-        mean_exposure = float(np.mean(daily_exposures))
+        mean_exposure = (float(np.mean(daily_exposures))
+                         if daily_exposures else None)
         mean_trade_return = (float(np.mean(closed_returns))
                              if closed_returns else None)
 
@@ -229,6 +243,10 @@ def simulate_exit_policy(
         "hypothetical_net_return_if_resolved": net_return,
         "hypothetical_marked_mdd_if_resolved": mdd,
         "mean_daily_invested_fraction_if_resolved": mean_exposure,
+        "exposure_window_start": (str(exposure_window_start.date())
+                                  if exposure_window_start is not None else None),
+        "exposure_window_end": (str(exposure_window_end.date())
+                                if exposure_window_end is not None else None),
         "mean_trade_net_return_if_resolved": mean_trade_return,
         "realized_buy_notional_krw": realized_buy_notional,
         "realized_sale_notional_krw": realized_sale_notional,
