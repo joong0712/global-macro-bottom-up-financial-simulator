@@ -1,0 +1,80 @@
+name: K-SWING v1.1 parallel alpha competition
+
+on:
+  push:
+    branches: [research/k-swing-v11-parallel-alpha]
+    paths:
+      - 'research/k_swing/alpha_*_v11.py'
+      - 'research/k_swing/tests/test_alpha_v11.py'
+      - '.github/workflows/k-swing-v11-alpha-parallel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - run: python -m pytest -q research/k_swing/tests/test_alpha_v11.py research/k_swing/tests/test_vcr_v10.py
+
+  hypothesis-test:
+    name: alpha-${{ matrix.method }}
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [momentum52, reversal3, vcr_trend, vcr_control]
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download 2017-2022 into separate private temp workspace
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/kswing-v11"
+          python -m research.k_swing.quality_audit --start-year 2017 --end-year 2022 --data "$RUNNER_TEMP/kswing-v11"
+      - name: Evaluate frozen hypothesis in two pre-2023 windows
+        run: |
+          python -m research.k_swing.alpha_experiment_v11 \
+            --method "${{ matrix.method }}" \
+            --data "$RUNNER_TEMP/kswing-v11" \
+            --output "$RUNNER_TEMP/kswing-v11-aggregate" --modulus 16
+      - name: Publish aggregate-only metrics to job summary
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          name=os.environ['METHOD']
+          root=Path(os.environ['RUNNER_TEMP'])/'kswing-v11-aggregate'
+          doc=json.loads((root/f'v11_{name}_aggregate.json').read_text())
+          lines=[f"# K-SWING v1.1: {name}", "",
+                 "**Exploratory 2019–2022 data; NO verified real trading alpha. 2023–2026 locked.**", "",
+                 "| Split | H | Signals | Trades | Hypothetical account return | Hypothetical MDD | Status |",
+                 "|---|---:|---:|---:|---:|---:|---|"]
+          for a in doc['scenarios']:
+              nr=a['hypothetical_net_return_if_resolved']
+              mdd=a['hypothetical_marked_mdd_if_resolved']
+              ret=f'{nr*100:.2f}%' if nr is not None else 'BLOCKED'
+              dd=f'{mdd*100:.2f}%' if mdd is not None else 'BLOCKED'
+              lines.append(f"| {a['split']} | {a['horizon']} | {a['raw_signals']} | {a['completed_trades']} | {ret} | {dd} | {a['status']} |")
+          lines+=["", "Cash exposure differs between strategies; paired analysis still needed.",
+                  "Historical issuer, corporate actions/delistings, fees and exchange fills are unverified."]
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines)+'\n')
+          PY
+        env:
+          METHOD: ${{ matrix.method }}
+      - name: Delete private price data regardless of result
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v11/_raw" "$RUNNER_TEMP/kswing-v11/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v11-${{ matrix.method }}-safe-aggregate
+          path: ${{ runner.temp }}/kswing-v11-aggregate/v11_${{ matrix.method }}_aggregate.json
+          retention-days: 7
