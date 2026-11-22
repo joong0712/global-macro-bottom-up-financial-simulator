@@ -27,7 +27,7 @@ No future price is an input to any entry/exit decision. Missing held bars invali
 
 Two CI matrix jobs: one for Ichimoku+MA, one for VCR+trend. Each evaluates both previously explored 2019–20 and 2021–22 periods and 5/10-session max holding. All three early exits are compared against a fixed baseline at 50, 100, and 200bp in aggregate. A separate regression test job checks stop-before-take, next-open exit after close, no future leakage, missing-held blocking, exact one-ticket baseline reconciliation, bootstrap deterministic behaviour.
 
-Common KOSPI/KOSDAQ 2017–22 screened OHLCV and 1/16 deterministic ticker sample, no 2023–2026 loading. At the original signal time T require previous 253 safe exchange-session bars, positive price/liquidity (from v1.3 candidate builder). Aggregate artifacts only; never publish ticker/date/individual fill evidence.
+Common KOSPI/KOSDAQ 2017–22 screened OHLCV and 1/16 deterministic ticker sample, no 2023–2026 loading in THIS run. **Cross-project caveat:** K-SWING v0.9 already ran provisional 2023 risk tests and v0.4 reports 2024–25 data smoke checks, so those years are not pristine project-level holdouts. 2026 remains locked for a separately preregistered one-shot confirmation. At the original signal time T require previous 253 safe exchange-session bars, positive price/liquidity (from v1.3 candidate builder). Aggregate artifacts only; never publish ticker/date/individual fill evidence.
 
 ## Strict candidate gate
 
