@@ -69,7 +69,7 @@ def symbol_signal_flags(symbol: pd.DataFrame, calendar: pd.DatetimeIndex,
                  & x.low.le(x[["open", "close", "high"]].min(axis=1))
                  & v.gt(0) & t.gt(0) & x.unsafe_session.eq(False))
     # Complete path since first BB observation needed for 120-band history.
-    warmup = cfg.bb_window + cfg.percentile_window - 1
+    warmup = cfg.bb_window + cfg.percentile_window
     clean = valid_bar.rolling(warmup, min_periods=warmup).sum().eq(warmup)
     ma = c.rolling(cfg.bb_window, min_periods=cfg.bb_window).mean()
     std = c.rolling(cfg.bb_window, min_periods=cfg.bb_window).std(ddof=0)
