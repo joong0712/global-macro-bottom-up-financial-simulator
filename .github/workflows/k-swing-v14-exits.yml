@@ -1,0 +1,96 @@
+name: K-SWING v1.4 Ichimoku SMA parallel exit research
+
+on:
+  push:
+    branches: [research/k-swing-v14-parallel-exit-rules]
+    paths:
+      - 'research/k_swing/ichimoku_ma_exit_v14.py'
+      - 'research/k_swing/exit_experiment_v14.py'
+      - 'research/k_swing/tests/test_early_exits_v14.py'
+      - '.github/workflows/k-swing-v14-exits.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  causal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Run v14 causal tests and v13/v12 regressions
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_early_exits_v14.py \
+            research/k_swing/tests/test_ichimoku_ma_v13.py \
+            research/k_swing/tests/test_alpha_v12.py \
+            research/k_swing/tests/test_alpha_v11.py \
+            research/k_swing/tests/test_vcr_v10.py
+
+  early-exit-study:
+    name: exit-${{ matrix.entry }}-${{ matrix.exit_mode }}
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: [ichi_ma_confirm, vcr_trend_control]
+        exit_mode: [baseline, kijun_break, sma20_break, either_break]
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download audited training-era bars into temporary private workspace
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 \
+            --keep-raw --output "$RUNNER_TEMP/kswing-v14"
+          python -m research.k_swing.quality_audit --start-year 2017 \
+            --end-year 2022 --data "$RUNNER_TEMP/kswing-v14"
+      - name: Compare frozen early-exit method with fixed T+1 buy
+        run: |
+          python -m research.k_swing.exit_experiment_v14 \
+            --data "$RUNNER_TEMP/kswing-v14" --output "$RUNNER_TEMP/kswing-v14-aggregate" \
+            --entry "${{ matrix.entry }}" --exit "${{ matrix.exit_mode }}" --modulus 16
+      - name: Report all aggregate returns, exits and exposure
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          entry, mode = os.environ["ENTRY"], os.environ["EXIT_MODE"]
+          root=Path(os.environ["RUNNER_TEMP"])/"kswing-v14-aggregate"
+          d=json.loads((root/f"v14_{entry}_{mode}_aggregate.json").read_text())
+          lines=[f"# v1.4 early exits: {entry}, {mode}", "",
+                 "**NO VERIFIED ALPHA, NO REAL FILLS; 2019–2022 reused development data; 2023–2026 locked.**", "",
+                 "| Period | H sessions | Closed | Hypothetical net return | MDD | Mean invested | Mean net trade | Status |",
+                 "|---|---:|---:|---:|---:|---:|---:|---|"]
+          for a in d["results"]:
+              def pc(k):
+                  v=a[k]
+                  return f"{v*100:.3f}%" if v is not None else "BLOCKED"
+              lines.append(f"| {a['split']} | {a['horizon']} | {a['completed_trades']} | "
+                           +pc("hypothetical_net_return_if_resolved")+" | "
+                           +pc("hypothetical_marked_mdd_if_resolved")+" | "
+                           +pc("mean_daily_invested_fraction_if_resolved")+" | "
+                           +pc("mean_trade_net_return_if_resolved")+" | "
+                           +a["status"]+" |")
+          lines+=["", "No published stock/date/fill traces; issuer actions, delistings, taxes and real executions unverified.",
+                  "Never promote a selected best-looking historical variant to live investment."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+        env:
+          ENTRY: ${{ matrix.entry }}
+          EXIT_MODE: ${{ matrix.exit_mode }}
+      - name: Destroy private per-security history regardless of failure
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v14"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v14-${{ matrix.entry }}-${{ matrix.exit_mode }}-safe-aggregate
+          path: ${{ runner.temp }}/kswing-v14-aggregate/v14_${{ matrix.entry }}_${{ matrix.exit_mode }}_aggregate.json
+          if-no-files-found: error
+          retention-days: 7
