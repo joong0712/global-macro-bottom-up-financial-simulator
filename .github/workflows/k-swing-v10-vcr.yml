@@ -1,0 +1,72 @@
+name: K-SWING v1.0 VCR training-only engineering
+
+on:
+  push:
+    branches: [research/k-swing-v10-vcr]
+    paths:
+      - 'research/k_swing/vcr_*_v10.py'
+      - 'research/k_swing/tests/test_vcr_v10.py'
+      - '.github/workflows/k-swing-v10-vcr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  causal-and-execution-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Verify T-only features, locked holdouts, bracket gap/stop mechanics
+        run: python -m pytest -q research/k_swing/tests/test_vcr_v10.py
+
+  historical-training-engineering:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Fetch only 2017-2022 training-era prices into temporary private workspace
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2022 --keep-raw \
+            --output "$RUNNER_TEMP/vcr-private"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2022 \
+            --data "$RUNNER_TEMP/vcr-private"
+      - name: Run six predeclared VCR / breakout engineering scenarios (no trades)
+        run: |
+          python -m research.k_swing.vcr_experiment_v10 \
+            --data "$RUNNER_TEMP/vcr-private" \
+            --output "$RUNNER_TEMP/vcr-aggregate-only" --modulus 16
+      - name: Summarize only safe aggregate counts and blocked status
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'vcr-aggregate-only'/'vcr_v10_aggregate_only.json'
+          result=json.loads(p.read_text())
+          out=["# K-SWING v1.0: VCR engineering only", "",
+               "**NO VERIFIED TRADING ALPHA, NO REAL EXECUTION, NO 2023–2026 TEST DATA.**", "",
+               "All figures are exploratory, selected on a deterministic code-hash subset; corporate actions and delistings are not certified.", "",
+               "| Strategy | Maximum hold | Raw signals | Simulated completed trades | Status |",
+               "|---|---:|---:|---:|---|"]
+          for r in result['results']:
+              out.append(f"| {r['strategy']} | {r['horizon']} | {r['n_raw_signals']} | {r['completed_trades']} | {r['status']} |")
+          out += ["", "For any unresolved holdings, estimated portfolio profit/MDD are invalid; source OHLCV stays private."]
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(out)+'\n')
+          PY
+      - name: Purge source pricing and identifiers
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/vcr-private/_raw" "$RUNNER_TEMP/vcr-private/_private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v10-vcr-aggregate-only-not-investment-results
+          path: ${{ runner.temp }}/vcr-aggregate-only/vcr_v10_aggregate_only.json
+          retention-days: 7
