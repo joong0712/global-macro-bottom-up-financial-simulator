@@ -4,7 +4,7 @@
 
 - Verified completed all-green CI: https://github.com/joong0712/global-macro-bottom-up-financial-simulator/actions/runs/45054895911
 - Source branch: research/k-swing-v13-ichimoku-ma-timing, Draft PR #11. Six strategy jobs, each eight combinations (2 subperiods x 2 entry delays x 2 holding periods) = 48 scenario rows.
-- Historical input: KOSPI/KOSDAQ 2017-2022 with strict unsafe-bar and 253-session continuity; deterministic ticker hash modulo 16 (166 sampled securities). Buy signals 2019-12-15? No: 2019-01-01 through 2020-12-15 and 2021-01-01 through 2022-12-15.
+- Historical input: KOSPI/KOSDAQ 2017-2022 with strict unsafe-bar and 253-session continuity; deterministic ticker hash modulo 16 (166 sampled securities). Signal dates: 2019-01-01 through 2020-12-15 and 2021-01-01 through 2022-12-15.
 - Funding and cash: 100 million KRW initial cash per scenario; max 5 million KRW per stock, 10 stocks open; assumed 50bp roundtrip costs; 5 or 10 sessions including entry, -3% stop / +8% take; no future leakage, true next-day or second-day historical open print if available. **Not actual exchange fills.**
 - All 48 result scenarios returned HYPOTHETICAL_OHLC_ONLY; none blocked by an unresolved holding in this selected sample. The absence of blocked holdings does NOT certify corporate-action/delisting completeness.
 - 2019-20 and 2021-22 periods had already been explored in earlier v1.0-v1.2 research, so both are **reused developmental evidence, not a valid unseen out-of-sample proof**.
