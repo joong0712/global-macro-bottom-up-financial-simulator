@@ -1,0 +1,84 @@
+name: K-SWING v1.2 parallel ML ranker and regime switcher
+
+on:
+  push:
+    branches: [research/k-swing-v12-ml-regime-parallel]
+    paths:
+      - 'research/k_swing/alpha_*_v12.py'
+      - 'research/k_swing/tests/test_alpha_v12.py'
+      - '.github/workflows/k-swing-v12-parallel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  causal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - run: python -m pytest -q research/k_swing/tests/test_alpha_v12.py research/k_swing/tests/test_alpha_v11.py research/k_swing/tests/test_vcr_v10.py
+
+  parallel:
+    name: model-${{ matrix.track }}
+    strategy:
+      fail-fast: false
+      matrix:
+        track: [ranker, regime]
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Pin LightGBM major version for ranker only
+        if: matrix.track == 'ranker'
+        run: python -m pip install 'lightgbm>=4.5,<5'
+      - name: Download audited 2017-2022 OHLCV to ephemeral private workspace
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/kswing-v12"
+          python -m research.k_swing.quality_audit --start-year 2017 --end-year 2022 --data "$RUNNER_TEMP/kswing-v12"
+      - name: Run frozen 2021-2022 exploratory evaluation without holdout access
+        run: |
+          python -m research.k_swing.alpha_${{ matrix.track }}_v12 \
+            --data "$RUNNER_TEMP/kswing-v12" \
+            --output "$RUNNER_TEMP/kswing-v12-summary" --modulus 16
+      - name: Write aggregate summary, never per-stock signals or train labels
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          tr=os.environ["TRACK"]
+          path=Path(os.environ["RUNNER_TEMP"])/"kswing-v12-summary"/("v12_"+("lightgbm" if tr=="ranker" else "regime")+"_aggregate_only.json")
+          r=json.loads(path.read_text())
+          lines=[f"# K-SWING v1.2 {tr}", "",
+                 "**DEVELOPMENT ONLY: 2021–2022 previously inspected. No real profitable alpha certified.**", "",
+                 "| Hold days | Status | Closed trades | Hypothetical return | Hypothetical MDD |",
+                 "|---:|---|---:|---:|---:|"]
+          for s in r["results"]:
+              ret=s["hypothetical_net_return_if_resolved"]
+              dd=s["hypothetical_marked_mdd_if_resolved"]
+              lines.append(f"| {s['horizon']} | {s['status']} | {s['completed_trades']} | "+
+                           (f"{100*ret:.2f}%" if ret is not None else "BLOCKED") + " | " +
+                           (f"{100*dd:.2f}%" if dd is not None else "BLOCKED") + " |")
+          lines+=["", "No official corporate action/delisting, fill, tax or listed-security validity certification.",
+                  "Trading is forbidden. 2023–2026 study data remain locked."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+        env:
+          TRACK: ${{ matrix.track }}
+      - name: Delete private market bars and training labels
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v12"
+      - name: Upload safe aggregate only
+        uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v12-${{ matrix.track }}-aggregate-only
+          path: ${{ runner.temp }}/kswing-v12-summary/*.json
+          if-no-files-found: error
+          retention-days: 7
