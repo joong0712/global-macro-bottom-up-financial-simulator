@@ -1,0 +1,101 @@
+name: K-SWING v1.3 Ichimoku and MA entry timing parallel
+
+on:
+  push:
+    branches: [research/k-swing-v13-ichimoku-ma-timing]
+    paths:
+      - 'research/k_swing/ichimoku_ma_*_v13.py'
+      - 'research/k_swing/ichimoku_ma_experiment_v13.py'
+      - 'research/k_swing/vcr_execution_v10.py'
+      - 'research/k_swing/tests/test_ichimoku_ma_v13.py'
+      - '.github/workflows/k-swing-v13-timing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  causal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Run Ichimoku cloud shift, entry-delay and older research regression tests
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_ichimoku_ma_v13.py \
+            research/k_swing/tests/test_alpha_v12.py \
+            research/k_swing/tests/test_alpha_v11.py \
+            research/k_swing/tests/test_vcr_v10.py
+
+  timing-study:
+    name: timing-${{ matrix.method }}
+    strategy:
+      fail-fast: false
+      matrix:
+        method:
+          - ichi_cloud_breakout
+          - ichi_kijun_reclaim
+          - ma_5x20
+          - ma20_reclaim
+          - ichi_ma_confirm
+          - vcr_trend_control
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Audit historical 2017-2022 prices in private temporary runner
+        run: |
+          python -m research.k_swing.marcap_ingest \
+            --start-year 2017 --end-year 2022 --keep-raw \
+            --output "$RUNNER_TEMP/kswing-v13"
+          python -m research.k_swing.quality_audit \
+            --start-year 2017 --end-year 2022 \
+            --data "$RUNNER_TEMP/kswing-v13"
+      - name: Compare two predetermined entries and 5/10 session holding
+        run: |
+          python -m research.k_swing.ichimoku_ma_experiment_v13 \
+            --method "${{ matrix.method }}" \
+            --data "$RUNNER_TEMP/kswing-v13" \
+            --output "$RUNNER_TEMP/kswing-v13-aggregate" \
+            --modulus 16
+      - name: GitHub step summary (aggregates only)
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          method=os.environ['METHOD']
+          f=Path(os.environ['RUNNER_TEMP'])/'kswing-v13-aggregate'/f'v13_{method}_aggregate.json'
+          out=json.loads(f.read_text())
+          lines=[f"# K-SWING v1.3 timing: {method}", "",
+                 "**EXPLORATORY 2019–2022; already inspected, NO verified investment alpha. 2023–2026 locked.**", "",
+                 "| Split | Entry T+ | Max holding | Signals | Closed | Hypothetical net return | MDD | Status |",
+                 "|---|---:|---:|---:|---:|---:|---:|---|"]
+          for r in out['results']:
+              net=r['hypothetical_net_return_if_resolved']
+              dd=r['hypothetical_marked_mdd_if_resolved']
+              lines.append(f"| {r['split']} | {r['entry_delay_sessions']} | {r['max_holding_sessions']} | {r['n_raw_signals']} | {r['completed_trades']} | "
+                           +(f"{net*100:.2f}%" if net is not None else "BLOCKED")+" | "
+                           +(f"{dd*100:.2f}%" if dd is not None else "BLOCKED")
+                           +f" | {r['status']} |")
+          lines+=["", "Different entry dates/holding exposure can confound NAV comparisons.",
+                  "Unverified issuer/corporate actions, delistings, effective tax and live fills. NEVER trade this research directly."]
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text("\n".join(lines)+"\n")
+          PY
+        env:
+          METHOD: ${{ matrix.method }}
+      - name: Remove private price data, successful or failed
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v13"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v13-${{ matrix.method }}-safe-aggregate
+          path: ${{ runner.temp }}/kswing-v13-aggregate/v13_${{ matrix.method }}_aggregate.json
+          if-no-files-found: error
+          retention-days: 7
