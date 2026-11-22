@@ -7,7 +7,7 @@ from research.k_swing.alpha_candidates_v11 import symbol_candidates, build_candi
 
 def bars_template():
     dates = pd.bdate_range("2019-01-01", periods=325)
-    close = np.full(len(dates), 100., dtype=float)
+    close = np.full(len(dates), 2000., dtype=float)
     x = pd.DataFrame({"date": dates, "ticker": "000001",
                       "open": close.copy(), "high": close + .5,
                       "low": close - .5, "close": close.copy(),
@@ -19,7 +19,7 @@ def bars_template():
 
 def candle(df, idx, price, volume=2e6):
     df.loc[idx, ["open", "high", "low", "close", "volume"]] = [
-        price, price + .5, price - .5, price, volume]
+        price * 20, price * 20 + 10, price * 20 - 10, price * 20, volume]
 
 
 def test_52_week_price_momentum():
@@ -34,7 +34,7 @@ def test_reversal_after_uptrend_dip():
     d, x = bars_template()
     for col, value in (("open", 115.), ("high", 115.5),
                        ("low", 114.5), ("close", 115.)):
-        x.loc[x.index[-50:-1], col] = value
+        x.loc[x.index[-50:-1], col] = value * 20
     candle(x, x.index[-1], 106.)
     result = symbol_candidates(x, d)
     assert result.strategy.eq("reversal3").any()
@@ -45,9 +45,10 @@ def test_vcr_trend_and_control_on_compressed_breakout():
     d, x = bars_template()
     prices = np.full(len(d), 100.)
     prices[:50] = 100 + np.sin(np.arange(50) / 2) * 10
+    prices = prices * 20
     x["open"] = prices
-    x["high"] = prices + .5
-    x["low"] = prices - .5
+    x["high"] = prices + 10
+    x["low"] = prices - 10
     x["close"] = prices
     candle(x, x.index[-1], 112.)
     result = symbol_candidates(x, d)
