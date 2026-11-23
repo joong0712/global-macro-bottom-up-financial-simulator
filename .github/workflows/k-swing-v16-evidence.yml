@@ -1,0 +1,56 @@
+name: K-SWING v1.6 parallel provenance and execution evidence gates
+
+on:
+  push:
+    branches: [research/k-swing-v16-evidence-gates]
+    paths:
+      - 'research/k_swing/evidence_gate_v16.py'
+      - 'research/k_swing/tests/test_evidence_gate_v16.py'
+      - '.github/workflows/k-swing-v16-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-evidence:
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [security_identity, corporate_actions, execution_costs]
+    name: evidence-${{ matrix.domain }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Audit claims, not historical bars
+        run: |
+          python -m research.k_swing.evidence_gate_v16 \
+            --output "$RUNNER_TEMP/evidence.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          domain=os.environ["DOMAIN"]
+          d=json.loads((Path(os.environ["RUNNER_TEMP"])/"evidence.json").read_text())
+          checks=d["checks"][domain]
+          lines=[f"# v1.6 {domain} documentary gate", "",
+                 f"**Status: {d['status']}**. No official new records supplied; zero returns claimed.", "",
+                 "| Evidence required | State |","|---|---|"]
+          lines.extend(f"| {k} | {v['status']} |" for k,v in checks.items())
+          lines+=["", "**2026 confirmation locked; live orders forbidden.**"]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+        env:
+          DOMAIN: ${{ matrix.domain }}
+
+  regression-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - run: python -m pytest -q research/k_swing/tests/test_evidence_gate_v16.py research/k_swing/tests/test_paired_exit_v15.py
