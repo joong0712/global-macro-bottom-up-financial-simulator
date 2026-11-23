@@ -15,7 +15,7 @@ def scan(rows, asof, top_sectors=3, leaders_per_sector=2):
     by_symbol = defaultdict(list)
     for row in rows:
         dt = datetime.fromisoformat(row["timestamp"])
-        if dt.date() != asof.date() or dt > asof:
+        if dt.date() != asof.date() or dt >= asof:
             continue
         if row.get("sector") and row.get("symbol"):
             by_symbol[row["symbol"]].append((dt, row))
