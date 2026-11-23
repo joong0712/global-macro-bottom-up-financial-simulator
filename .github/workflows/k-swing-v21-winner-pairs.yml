@@ -1,0 +1,29 @@
+name: K-SWING v2.1 rising-stock factor pairs
+on:
+  push:
+    branches: [research/k-swing-v21-winner-pair-interactions]
+    paths:
+      - 'research/k_swing/winner_pairs_v21.py'
+      - 'research/k_swing/tests/test_winner_pairs_v21.py'
+      - '.github/workflows/k-swing-v21-winner-pairs.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  factor-pair-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        focus: [pair-enrichment, leak-guards]
+    name: ${{ matrix.focus }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pytest pandas numpy pyarrow
+      - run: python -m pytest -q research/k_swing/tests/test_winner_pairs_v21.py
+      - run: |
+          echo "Synthetic pair tests only; no private factor parquet available." >> "$GITHUB_STEP_SUMMARY"
+          echo "No empirical commonalities or after-cost profitability claimed." >> "$GITHUB_STEP_SUMMARY"
