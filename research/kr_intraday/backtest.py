@@ -60,7 +60,7 @@ def signal(strategy, bars, i, cum_pv, cum_vol):
     raise ValueError(strategy)
 
 
-def run(groups, risk_pct=0.01, target_r=2.0, round_trip_cost_pct=0.002):
+def run(groups, risk_pct=0.01, target_r=2.0, round_trip_cost_pct=0.002, min_signal_time=None):
     if not 0 < risk_pct < 1 or target_r <= 0 or round_trip_cost_pct < 0:
         raise ValueError("invalid parameters")
     trades = []
@@ -95,7 +95,7 @@ def run(groups, risk_pct=0.01, target_r=2.0, round_trip_cost_pct=0.002):
                         position = None
                         # At most one trade per symbol per strategy per day in v1.
                         break
-                if position is None and i+1 < len(bars) and signal(strategy, bars, i, pv, vol):
+                if position is None and i+1 < len(bars) and (min_signal_time is None or b["dt"].time() >= min_signal_time) and signal(strategy, bars, i, pv, vol):
                     pending = True
             # Missing end-of-day bars must not silently turn into overnight positions.
             if position is not None:
