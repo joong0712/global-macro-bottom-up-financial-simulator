@@ -1,0 +1,22 @@
+name: KR intraday research tests
+on:
+  push:
+    branches:
+      - research/kr-intraday-v1
+    paths:
+      - 'research/kr_intraday/**'
+      - '.github/workflows/kr-intraday-tests.yml'
+  pull_request:
+    paths:
+      - 'research/kr_intraday/**'
+      - '.github/workflows/kr-intraday-tests.yml'
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run research unit tests
+        run: python -m unittest discover -s research/kr_intraday/tests -v
