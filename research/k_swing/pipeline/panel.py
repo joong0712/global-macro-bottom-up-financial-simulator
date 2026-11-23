@@ -39,14 +39,14 @@ class Panel:
         return self.volume.gt(0) & self.open.gt(0)
 
 
-def read_marcap(files: list[Path]) -> pd.DataFrame:
+def read_marcap(files: list[Path], allow_holdout: bool = False) -> pd.DataFrame:
     frames = []
     for path in files:
         frame = pd.read_parquet(path, columns=list(RAW_COLUMNS))
         frames.append(frame)
     raw = pd.concat(frames, ignore_index=True)
     raw["Date"] = pd.to_datetime(raw["Date"]).dt.normalize()
-    if (raw["Date"] >= config.LOCKED_FROM).any():
+    if not allow_holdout and (raw["Date"] >= config.LOCKED_FROM).any():
         raise ValueError("2026 holdout data supplied; v24 never reads it")
     raw = raw.loc[raw["Market"].isin(["KOSPI", "KOSDAQ"])].copy()
     raw["Code"] = raw["Code"].astype(str)

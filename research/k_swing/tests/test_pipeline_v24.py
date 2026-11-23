@@ -173,3 +173,76 @@ def test_zero_cost_diagnostic_matches_gross_return():
                settings=config.PRIMARY.with_(top_n=1, min_turnover=0, min_history=0, zero_cost=True))
     t = res.trades.iloc[0]
     assert t["net_return"] == pytest.approx(t["gross_return"])
+
+
+# ---------------- v25 rank-buffer engine ----------------
+from research.k_swing.pipeline import buffer as B, run_v25
+
+
+def _three_stock_panel(closes=None, opens=None):
+    closes = closes or {"000010": [10000, 10100, 10200, 10300, 10400],
+                        "000020": [20000, 20000, 20000, 20000, 20000],
+                        "000030": [5000, 5000, 5000, 5000, 5000]}
+    return P.build_panel(raw_frame(closes, opens=opens))
+
+
+def _buffer(pnl, score_rows, mode="close", top_n=1, k=2, zero_cost=False):
+    score = pd.DataFrame(score_rows, index=pnl.sessions[:len(score_rows)], columns=pnl.close.columns)
+    score = score.reindex(pnl.sessions)
+    elig = pd.DataFrame(True, index=pnl.sessions, columns=pnl.close.columns)
+    tov = pd.DataFrame(20e9, index=pnl.sessions, columns=pnl.close.columns)
+    end = pnl.sessions[len(score_rows) - 1]
+    return B.run_buffer(pnl, score, elig, tov, str(pnl.sessions[0].date()), str(end.date()),
+                        mode=mode, zero_cost=zero_cost, top_n=top_n, buffer_k=k)
+
+
+def test_buffer_buys_at_signal_close_and_holds_inside_buffer():
+    pnl = _three_stock_panel()
+    rows = [[3, 2, 1], [2, 3, 1], [1, 3, 2]]  # A best, then rank 2 (kept, K=2), then rank 3 (sold)
+    res = _buffer(pnl, rows, zero_cost=True)
+    t = res.trades.iloc[0]
+    assert t["code"] == "000010" and t["entry_date"] == pnl.sessions[0] and t["exit_date"] == pnl.sessions[2]
+    assert t["gross_return"] == pytest.approx(10200 / 10000 - 1)
+    assert res.counters["buys"] == 2  # A on day 0, B on day 2
+
+
+def test_buffer_close_fill_costs():
+    pnl = _three_stock_panel()
+    res = _buffer(pnl, [[3, 2, 1], [1, 3, 2]])
+    t = res.trades.iloc[0]
+    slip, tax = 0.0010, config.sell_tax(pnl.sessions[1])
+    expected = 10100 * (1 - slip) * (1 - config.COMMISSION - tax) / (10000 * (1 + slip) * (1 + config.COMMISSION)) - 1
+    assert t["net_return"] == pytest.approx(expected)
+
+
+def test_buffer_limit_up_close_blocks_buy():
+    closes = {"000010": [10000, 12990, 13000], "000020": [20000, 20000, 20000]}
+    pnl = P.build_panel(raw_frame(closes))
+    res = _buffer(pnl, [[np.nan, np.nan], [2, 1]], top_n=1, k=1)
+    assert res.counters["blocked_buy"] == 1 and res.counters["buys"] == 0
+
+
+def test_buffer_next_open_mode_fills_at_next_open():
+    pnl = _three_stock_panel(opens={("000010", 1): 10050})
+    res = _buffer(pnl, [[3, 2, 1], [3, 2, 1], [1, 3, 2]], mode="next_open", zero_cost=True)
+    t = res.trades.iloc[0]
+    assert t["entry_date"] == pnl.sessions[1] and t["exit_date"] == pnl.sessions[3]
+    assert t["gross_return"] == pytest.approx(10300 / 10050 - 1)
+
+
+def test_v25_holdout_requires_explicit_approval(tmp_path, monkeypatch):
+    monkeypatch.delenv("KSWING_OPEN_2026_HOLDOUT", raising=False)
+    with pytest.raises(SystemExit, match="locked"):
+        run_v25.main(["--marcap-dir", str(tmp_path), "--public-output", str(tmp_path / "o"), "--open-2026-holdout"])
+
+
+def test_v25_holdout_refuses_second_look(tmp_path, monkeypatch):
+    monkeypatch.setenv("KSWING_OPEN_2026_HOLDOUT", run_v25.HOLDOUT_TOKEN)
+    pre = tmp_path / "pre.json"
+    pre.write_text('{"passed": ["V25A"]}')
+    out = tmp_path / "o"
+    out.mkdir()
+    (out / "HOLDOUT_2026_OPENED").write_text("opened")
+    with pytest.raises(SystemExit, match="already opened"):
+        run_v25.main(["--marcap-dir", str(tmp_path), "--public-output", str(out), "--open-2026-holdout",
+                      "--precheck-json", str(pre)])
