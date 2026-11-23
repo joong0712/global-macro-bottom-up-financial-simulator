@@ -10,7 +10,7 @@
 Investigate licensed minute-history from a Korean broker API or market-data vendor; check historical coverage, redistribution rights, and per-symbol limits. Do not assume free KRX daily-data endpoints provide intraday minute history. The repository does not contain a licensed minute dataset.
 
 ## Blocking caveats
-- Current pipeline uses selection at 09:10 but the strategy engine can generate 09:05–09:09 signals on that selected universe: **this is lookahead**. For valid research, enforce entry signals strictly after selection time or generate earlier point-in-time snapshots. DO NOT interpret current pipeline results as performance until this is fixed.
+- Pipeline freezes the universe using data available by 09:10 and only permits signals at 09:10 or later, executed on the next bar. Selection at 09:10 remains approximate because the CSV's bar timestamp semantics and completion time must be verified. DO NOT interpret current pipeline results as performance until the data and execution model are validated.
 - Current scanner uses bar close * volume as approximate turnover and does not model venue-specific trades.
 - Missing-minute gaps, trading halts, VI, order-book liquidity and delisted stocks remain unhandled.
 - Signal-engine stop/target processing is OHLC-only; same-bar sequence unknown.
