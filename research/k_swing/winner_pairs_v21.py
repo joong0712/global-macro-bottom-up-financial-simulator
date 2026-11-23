@@ -13,9 +13,9 @@ import numpy as np
 import pandas as pd
 
 PAIRS = (
-    ("ta__rsi_14", "ta__volume_ratio_20"),
-    ("ta__macd_hist", "ta__atr_pct_14"),
-    ("ta__ichi_cloud_top_gap", "ta__volume_ratio_20"),
+    ("ta__stoch_rsi_14", "ta__parkinson_vol_20"),
+    ("ta__macd_hist_pct", "ta__parkinson_vol_20"),
+    ("ta__ichi_cloud_top_gap", "ta__parkinson_vol_20"),
 )
 HORIZONS = (5, 10)
 RISE = (.03, .05)
