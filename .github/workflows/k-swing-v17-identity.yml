@@ -1,0 +1,33 @@
+name: K-SWING v1.7 official historical ISIN reconciliation
+
+on:
+  push:
+    branches: [research/k-swing-v17-official-identity-reconcile]
+    paths:
+      - 'research/k_swing/official_identity_v17.py'
+      - 'research/k_swing/tests/test_official_identity_v17.py'
+      - '.github/workflows/k-swing-v17-identity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  official-identity-tests:
+    name: official-identity-${{ matrix.check }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [asof, pagination, duplicate, confirmation]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pytest
+      - name: Validate official identity parser and as-of constraints
+        run: python -m pytest -q research/k_swing/tests/test_official_identity_v17.py
+      - name: Mark historical-data acquisition as pending
+        run: |
+          echo "KRX/FSC official API access key and complete 2017–22 daily snapshots were NOT supplied." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic contract tests only; no official identity rows acquired; no historical PnL certified." >> "$GITHUB_STEP_SUMMARY"
