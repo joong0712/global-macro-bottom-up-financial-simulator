@@ -1,0 +1,29 @@
+name: K-SWING v1.9 break-even cost frontier
+on:
+  push:
+    branches: [research/k-swing-v19-cost-frontier]
+    paths:
+      - 'research/k_swing/cost_frontier_v19.py'
+      - 'research/k_swing/tests/test_cost_frontier_v19.py'
+      - '.github/workflows/k-swing-v19-cost-frontier.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cost-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        focus: [reproducibility, cost-sensitivity]
+    name: ${{ matrix.focus }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pytest
+      - run: python -m pytest -q research/k_swing/tests/test_cost_frontier_v19.py
+      - run: python -m research.k_swing.cost_frontier_v19 --output "$RUNNER_TEMP/cost_frontier.json"
+      - run: |
+          echo "Frozen v1.5 aggregate cost frontier only. No new OHLCV, no live orders, 2026 locked." >> "$GITHUB_STEP_SUMMARY"
