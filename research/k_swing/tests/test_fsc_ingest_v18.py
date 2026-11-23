@@ -37,9 +37,11 @@ def test_empty_valid_official_day():
 
 
 def test_incomplete_pagination_fails_closed():
+    def fetch(url):
+        page = int(parse_qs(urlparse(url).query)["pageNo"][0])
+        return response([record("005930")] if page == 1 else [], 2)
     with pytest.raises(ValueError, match="Incomplete"):
-        collect_one_day("20200102", "test",
-                        fetch=lambda _: response([record("005930")], 2))
+        collect_one_day("20200102", "test", fetch=fetch)
 
 
 def test_duplicate_pages_fails_closed():
