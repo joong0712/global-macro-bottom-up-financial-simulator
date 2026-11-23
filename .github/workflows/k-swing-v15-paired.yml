@@ -1,0 +1,97 @@
+name: K-SWING v1.5 paired exit block bootstrap in parallel
+
+on:
+  push:
+    branches: [research/k-swing-v15-paired-block-bootstrap]
+    paths:
+      - 'research/k_swing/paired_exit_v15.py'
+      - 'research/k_swing/paired_experiment_v15.py'
+      - 'research/k_swing/tests/test_paired_exit_v15.py'
+      - '.github/workflows/k-swing-v15-paired.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  causal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Test isolated exit parity, bootstrap and previous simulator guards
+        run: |
+          python -m pytest -q \
+            research/k_swing/tests/test_paired_exit_v15.py \
+            research/k_swing/tests/test_early_exits_v14.py \
+            research/k_swing/tests/test_ichimoku_ma_v13.py \
+            research/k_swing/tests/test_alpha_v12.py \
+            research/k_swing/tests/test_alpha_v11.py
+
+  paired-cohorts:
+    name: paired-${{ matrix.entry }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: [ichi_ma_confirm, vcr_trend_control]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download only screened 2017-2022 training-era Korean bars
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 \
+            --keep-raw --output "$RUNNER_TEMP/kswing-v15"
+          python -m research.k_swing.quality_audit --start-year 2017 \
+            --end-year 2022 --data "$RUNNER_TEMP/kswing-v15"
+      - name: Match each T+1 trade, vary only exits, calculate confidence bounds
+        run: |
+          python -m research.k_swing.paired_experiment_v15 \
+            --data "$RUNNER_TEMP/kswing-v15" \
+            --output "$RUNNER_TEMP/kswing-v15-aggregates" \
+            --entry "${{ matrix.entry }}" --modulus 16
+      - name: Publish safe statistical aggregates and limitations
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          name=os.environ["ENTRY"]
+          f=Path(os.environ["RUNNER_TEMP"])/"kswing-v15-aggregates"/f"v15_{name}_paired_aggregate.json"
+          a=json.loads(f.read_text())
+          lines=[f"# K-SWING v1.5 matched trade exit diagnostics: {name}", "",
+                 "**NOT capital-constrained portfolio PnL; already inspected historical dates; no profitable alpha verified.**", "",
+                 "| Subperiod | Max H | Matched trades | Exit | Baseline mean 50bp net | Exit mean 50bp net | Paired improvement | 95% block CI for improvement |",
+                 "|---|---:|---:|---|---:|---:|---:|---|"]
+          for result in a["results"]:
+              for c in result["comparisons"]:
+                  q=c["cost_50bps"]
+                  def pct(v):
+                      return f"{v*100:.3f}%" if v is not None else "BLOCKED"
+                  lines.append(f"| {result['split']} | {result['max_hold']} | {result['completed_matched']} | "
+                               f"{c['compared_exit']} | {pct(q['baseline_mean_net_trade'])} | "
+                               f"{pct(q['variant_mean_net_trade'])} | {pct(q['mean_matched_improvement'])} | "
+                               f"[{pct(q['paired_20session_block_ci95_lower'])}, {pct(q['paired_20session_block_ci95_upper'])}] |")
+          lines+=["", "20-session calendar-block bootstrap is diagnostic, NOT multiple-comparison corrected.",
+                  "Also stressed 100/200bp fees, included in aggregate JSON. No true independent 2023-2026 data accessed.",
+                  "Corporate actions, delistings, exact tax/fills and market exposure remain unverified. No live orders."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+        env:
+          ENTRY: ${{ matrix.entry }}
+      - name: Destroy per-security bars, even after failure
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v15"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v15-${{ matrix.entry }}-aggregate-only
+          path: ${{ runner.temp }}/kswing-v15-aggregates/v15_${{ matrix.entry }}_paired_aggregate.json
+          if-no-files-found: error
+          retention-days: 7
