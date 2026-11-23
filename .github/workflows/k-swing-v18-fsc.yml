@@ -1,0 +1,37 @@
+name: K-SWING v1.8 FSC official ingestion contract
+
+on:
+  push:
+    branches: [research/k-swing-v18-official-fsc-ingest]
+    paths:
+      - 'research/k_swing/fsc_ingest_v18.py'
+      - 'research/k_swing/fsc_reconcile_v18.py'
+      - 'research/k_swing/tests/test_fsc_ingest_v18.py'
+      - 'research/k_swing/tests/test_fsc_reconcile_v18.py'
+      - '.github/workflows/k-swing-v18-fsc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fsc-contract-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [ingest, reconcile]
+    name: fsc-${{ matrix.component }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pytest
+      - name: Check FSC historical official data contract
+        run: python -m pytest -q research/k_swing/tests/test_fsc_${{ matrix.component }}_v18.py
+      - name: Explain remaining official data blocker
+        run: |
+          echo "Synthetic parser/adapter tests only. No API service key was provided, and no official historical data was downloaded." >> "$GITHUB_STEP_SUMMARY"
+          echo "Do not upload FSC raw records: the public data license prohibits redistribution and commercial use." >> "$GITHUB_STEP_SUMMARY"
+          echo "No alpha or portfolio profit verified. 2026 remains locked." >> "$GITHUB_STEP_SUMMARY"
