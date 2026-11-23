@@ -14,6 +14,14 @@ class SectorScanTests(unittest.TestCase):
         self.assertEqual(leaders[0]["symbol"], "A")
         self.assertEqual(leaders[0]["relative_turnover"], 1)
 
+    def test_snapshot_at_cutoff_is_not_completed(self):
+        rows = [
+            dict(timestamp="2026-11-20T09:09:00", symbol="A", sector="chips", close=100, volume=100, baseline_turnover=10000, prev_close=99, spread_bps=10),
+            dict(timestamp="2026-11-20T09:10:00", symbol="B", sector="bio", close=200, volume=100000, baseline_turnover=1, prev_close=100, spread_bps=10),
+        ]
+        _, leaders = scan(rows, "2026-11-20T09:10:00")
+        self.assertEqual([x["symbol"] for x in leaders], ["A"])
+
     def test_spread_exclusion(self):
         rows = [dict(timestamp="2026-11-20T09:01:00", symbol="A", sector="chips", close=100, volume=100, baseline_turnover=100, prev_close=99, spread_bps=50)]
         sectors, leaders = scan(rows, "2026-11-20T09:01:00")
