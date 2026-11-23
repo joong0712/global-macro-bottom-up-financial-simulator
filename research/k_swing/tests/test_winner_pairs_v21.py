@@ -6,14 +6,14 @@ from research.k_swing.winner_pairs_v21 import describe_pairs, consistency, PAIRS
 def fixture():
     rows = []
     for year in (2019, 2021):
-        for i in range(100):
+        for i in range(200):
             rows.append({
                 "date": f"{year}-06-03", "ticker": f"{i:06d}",
                 "ta__stoch_rsi_14": float(i),
                 "ta__parkinson_vol_20": float(i),
                 "ta__macd_hist_pct": float(i),
                 "ta__ichi_cloud_top_gap": float(i),
-                "forward_return_5": .07 if i >= 80 else -.02,
+                "forward_return_5": .07 if i >= 160 else -.02,
                 "forward_return_10": .07 if i >= 80 else -.02,
             })
     return pd.DataFrame(rows)
