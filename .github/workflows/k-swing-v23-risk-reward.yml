@@ -1,0 +1,68 @@
+name: K-SWING v2.3 upside downside and incremental effects
+on:
+  push:
+    branches: [research/k-swing-v23-upside-downside-incremental]
+    paths:
+      - 'research/k_swing/winner_risk_reward_v23.py'
+      - 'research/k_swing/tests/test_winner_risk_reward_v23.py'
+      - '.github/workflows/k-swing-v23-risk-reward.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pandas numpy pytest
+      - run: python -m pytest -q research/k_swing/tests/test_winner_risk_reward_v23.py
+  historical-risk-reward:
+    needs: contract-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download 2017-22 only (private temporary files)
+        run: python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/v23"
+      - name: Screen historical source
+        run: python -m research.k_swing.quality_audit --start-year 2017 --end-year 2022 --data "$RUNNER_TEMP/v23"
+      - name: Calculate actual 2019-22 risk reward aggregates
+        run: python -m research.k_swing.winner_risk_reward_v23 --data "$RUNNER_TEMP/v23" --aggregate-output "$RUNNER_TEMP/v23-result" --modulus 16
+      - name: Public aggregate-only summary
+        run: |
+          mkdir -p v23-public
+          cp "$RUNNER_TEMP/v23-result/"* v23-public/
+          python - <<'PY'
+          import pandas as pd,os
+          from pathlib import Path
+          r=pd.read_csv("v23-public/risk_reward_aggregate.csv")
+          d=pd.read_csv("v23-public/incremental_aggregate.csv")
+          lines=["# K-SWING v2.3 — observed risk and reward (not trading alpha)","",
+                 "Roundtrip cost assumption: 50bps; no actual execution, corporate-action certification, or independent validation.","",
+                 "| Period | Horizon | Cohort | N | Up >=5% | Down <=-5% | Mean gross | Mean net (50bps) |",
+                 "|---|---:|---|---:|---:|---:|---:|---:|"]
+          for _,x in r.iterrows():
+              if x.cohort not in ("universe","high_vol"): continue
+              lines.append(f"| {x.period} | {x.horizon}d | {x.cohort} | {x.observations} | {100*x.up_5_pct:.1f}% | {100*x.down_5_pct:.1f}% | {x.mean_gross_pct:.2f}% | {x.mean_net_50bps_pct:.2f}% |")
+          lines+=["","## Additional factor within high volatility",
+                  "| Period | H | Added factor | Joint N | Up +5% difference pp | Down -5% difference pp | Net mean difference pp |",
+                  "|---|---:|---|---:|---:|---:|---:|"]
+          for _,x in d.iterrows():
+              lines.append(f"| {x.period} | {x.horizon}d | {x.second_factor} | {x.joint_n} | {x.joint_minus_highvol_up_5_pct_pp:.2f} | {x.joint_minus_highvol_down_5_pct_pp:.2f} | {x.joint_minus_highvol_mean_net_pct_points:.2f} |")
+          lines+=["","**Descriptive only**: sample overlaps, future returns are labels not executable PnL; 2026 holdout untouched."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Delete private files
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/v23" "$RUNNER_TEMP/v23-result"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v23-aggregate-only
+          path: v23-public/
+          retention-days: 7
