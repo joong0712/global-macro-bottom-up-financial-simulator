@@ -43,7 +43,7 @@ def run_pipeline(minute_csv, snapshot_csv, **kwargs):
                 "baseline_turnover", "prev_close")).issubset(snapshots[0].keys() if snapshots else []):
         raise ValueError("missing snapshot columns or empty snapshot file")
     selected, selections = selected_groups(groups, snapshots)
-    return run(selected, **kwargs), selections
+    return run(selected, min_signal_time=time(9, 10), **kwargs), selections
 
 
 def main():
