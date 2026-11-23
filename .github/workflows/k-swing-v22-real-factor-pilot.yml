@@ -1,0 +1,68 @@
+name: K-SWING v2.2 historical winner-factor pilot (ephemeral)
+on:
+  push:
+    branches: [research/k-swing-v22-ephemeral-market-factor-run]
+    paths:
+      - 'research/k_swing/winner_ephemeral_v22.py'
+      - '.github/workflows/k-swing-v22-real-factor-pilot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-historical-winner-factor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install pinned research dependencies
+        run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Acquire only 2017-2022 pinned public-source history privately
+        run: |
+          python -m research.k_swing.marcap_ingest --start-year 2017 --end-year 2022 --keep-raw --output "$RUNNER_TEMP/kswing-v22"
+      - name: Screen corporate-action candidates and incomplete sessions
+        run: |
+          python -m research.k_swing.quality_audit --start-year 2017 --end-year 2022 --data "$RUNNER_TEMP/kswing-v22"
+      - name: Compute actual 2019-22 factor-winner associations
+        run: |
+          python -m research.k_swing.winner_ephemeral_v22 --data "$RUNNER_TEMP/kswing-v22" --aggregate-output "$RUNNER_TEMP/v22-aggregates" --modulus 16
+      - name: Publish aggregate-only summary (no symbols or raw OHLCV)
+        run: |
+          mkdir -p ./kswing-v22-public
+          cp "$RUNNER_TEMP/v22-aggregates/"* ./kswing-v22-public/
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          import pandas as pd
+          root=Path("./kswing-v22-public")
+          meta=json.loads((root/"aggregate_manifest.json").read_text())
+          s=pd.read_csv(root/"winner_single_factor_aggregate.csv")
+          p=pd.read_csv(root/"winner_pair_aggregate.csv")
+          lines=["# K-SWING v2.2 — retrospective 2019–22 winner-factor associations", "",
+                 f"Hashed sampled securities: {meta['tickers']}",
+                 f"Signal factor rows: {meta['factor_panel_rows']}",
+                 f"Single-factor cross-period consistent signs: {meta['single_consistent_signs']}",
+                 f"Two-factor positive lift both periods: {meta['pair_positive_lift_both_periods']}",
+                 "", "## Single factors with same direction in both explored periods",
+                 "| Factor | H | Rise | Train top-bottom pp | Check top-bottom pp |",
+                 "|---|---:|---:|---:|---:|"]
+          for _,r in s.loc[s.direction_consistent.eq(True)].head(15).iterrows():
+              lines.append(f"| {r.factor} | {int(r.horizon)} | {100*r.rise_threshold:.0f}% | {r.top_minus_bottom_pp_train:.2f} | {r.top_minus_bottom_pp_check:.2f} |")
+          lines += ["", "## Pair quadrants with positive lift in both explored periods",
+                    "| Pair | Quadrant | H | Rise | Earlier pp | Later pp |",
+                    "|---|---|---:|---:|---:|---:|"]
+          for _,r in p.loc[p.direction_consistent.eq(True)].head(15).iterrows():
+              lines.append(f"| {r.factor_a} + {r.factor_b} | {r.quadrant} | {int(r.horizon)} | {100*r.rise_threshold:.0f}% | {r.excess_probability_pp_early:.2f} | {r.excess_probability_pp_late:.2f} |")
+          lines += ["", "These are **post-hoc correlations**, NOT investment alpha. Multiple testing and official issuer actions unverified.",
+                    "2019–22 was already explored; no independent confirmation. No 2026 data or trades."]
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(lines)+"\n")
+          PY
+      - name: Delete private raw and per-ticker matrices
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kswing-v22" "$RUNNER_TEMP/v22-aggregates"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v22-factor-aggregate-only
+          path: ./kswing-v22-public/
+          retention-days: 7
