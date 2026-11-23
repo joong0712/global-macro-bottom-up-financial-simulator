@@ -1,0 +1,55 @@
+name: K-SWING v2.4 unified pipeline
+on:
+  push:
+    branches: [research/k-swing-v24-portfolio-pipeline]
+    paths:
+      - 'research/k_swing/pipeline/**'
+      - 'research/k_swing/tests/test_pipeline_v24.py'
+      - '.github/workflows/k-swing-v24-pipeline.yml'
+  workflow_dispatch:
+    inputs:
+      full_study:
+        description: 'Re-run the full 2016-2025 study (aggregates only; 2026 never downloaded)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - run: python -m pytest -q research/k_swing/tests
+  full-study:
+    if: github.event_name == 'workflow_dispatch' && inputs.full_study
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r research/k_swing/requirements.txt
+      - name: Download pinned marcap 2016-2025 to a private temp folder
+        run: |
+          mkdir -p "$RUNNER_TEMP/marcap"
+          REF=$(python -c "from research.k_swing.pipeline.config import MARCAP_REF; print(MARCAP_REF)")
+          for y in $(seq 2016 2025); do
+            curl -fsSL --retry 3 -o "$RUNNER_TEMP/marcap/marcap-$y.parquet" \
+              "https://raw.githubusercontent.com/FinanceData/marcap/$REF/data/marcap-$y.parquet"
+          done
+      - name: Run v24 study
+        run: python -W ignore -m research.k_swing.pipeline.run --marcap-dir "$RUNNER_TEMP/marcap" --private-output "$RUNNER_TEMP/private" --public-output v24-public
+      - run: cat v24-public/v24_aggregate.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Delete private files
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/marcap" "$RUNNER_TEMP/private"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kswing-v24-aggregate-only
+          path: v24-public/
+          retention-days: 30
