@@ -14,12 +14,13 @@
 | v20–v22 | 오른 종목의 공통 지표 | 고변동성(=크게 움직이는 종목) | `V22_OBSERVED_WINNER_FACTOR_RESULTS.md` |
 | v23 | 고변동성의 상승 vs 하락 꼬리 | 하락 꼬리가 더 큼 — NO-GO | `V23_RESULTS_AUDIT.md` |
 | **v24** | 전 종목·수정주가·실제 비용 포트폴리오, 사전등록 가설 3개 | **NO-GO**. 비용 장벽 연 15–32%, 비용 0이어도 개발 구간 음수. 수익이 야간에 몰리는 구조 발견 | `V24_PROTOCOL.md`, `V24_RESULTS.md`, `reports/V24_AGGREGATE.md` |
+| **v25** | 종가(시간외 종가) 진입 + 순위 버퍼로 야간 수익 확보·회전율 축소 | 사전점검 **NO-GO** → 2026 미개봉. 종가 진입이 HIGH52를 연 18%p 개선했지만 비용 0에서도 음수. LOWVOL은 회전율 3.7배로 줄었으나 2018–22 음수 | `V25_PROTOCOL.md`, `V25_PRECHECK_RESULTS.md`, `reports/V25_PRECHECK.json` |
 
 ## 이미 본 데이터 (재사용 시 검증이 아님)
 
 - 2019–2022: v1–v23에서 반복 사용. 2018–2022: v24 개발.
 - 2023–2025: v0.3 기본 지표 IC, v24 검증.
-- **2026: 아직 아무도 보지 않음.** 한 번만 연다.
+- **2026: 아직 아무도 보지 않음.** 한 번만 연다(v25 사전점검 탈락으로 열지 않음).
 
 ## 실행
 
@@ -27,5 +28,6 @@
     python -m pytest -q research/k_swing/tests
     # marcap-2016..2025.parquet (고정 커밋 94c138d)를 비공개 폴더에 두고
     python -m research.k_swing.pipeline.run --marcap-dir DIR --private-output PRIVATE --public-output PUBLIC
+    python -m research.k_swing.pipeline.run_v25 --marcap-dir DIR --public-output PUBLIC   # 1단계 사전점검
 
 GitHub Actions: `K-SWING v2.4 unified pipeline` → Run workflow → `full_study` 체크 시 같은 연구를 재실행하고 집계만 남긴다.

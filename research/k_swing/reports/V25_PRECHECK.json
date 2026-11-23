@@ -1,0 +1,225 @@
+{
+  "stage": "1_seen_data_precheck_not_evidence",
+  "tests": {
+    "V25A": {
+      "main_close_entry": {
+        "start": "2018-01-02",
+        "end": "2025-12-29",
+        "sessions": 1962,
+        "strategy_cagr_pct": -19.091083,
+        "benchmark_cagr_pct": 0.387424,
+        "strategy_mean_ann_pct": -18.511282,
+        "excess_mean_ann_pct": -21.752561,
+        "excess_ci95_ann_pct": [
+          -37.282605,
+          -6.166542
+        ],
+        "excess_p_bootstrap": 0.997,
+        "excess_t_newey_west": -2.756727,
+        "strategy_sharpe": -0.804457,
+        "strategy_mdd_pct": -83.977484,
+        "avg_invested_pct": 99.438382,
+        "trades": 5520,
+        "trade_hit_rate_net_pct": 33.478261,
+        "trade_mean_gross_pct": 0.060867,
+        "trade_mean_net_pct": -0.55037,
+        "cost_per_trade_pct": 0.611237,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -41.313,
+            "benchmark": -12.774,
+            "excess_mean_ann": -41.597
+          },
+          "2019": {
+            "strategy": -3.296,
+            "benchmark": -0.921,
+            "excess_mean_ann": -2.907
+          },
+          "2020": {
+            "strategy": -10.843,
+            "benchmark": 37.489,
+            "excess_mean_ann": -44.615
+          },
+          "2021": {
+            "strategy": -25.786,
+            "benchmark": 15.86,
+            "excess_mean_ann": -44.847
+          },
+          "2022": {
+            "strategy": 7.72,
+            "benchmark": -30.841,
+            "excess_mean_ann": 44.054
+          },
+          "2023": {
+            "strategy": -36.614,
+            "benchmark": 7.343,
+            "excess_mean_ann": -53.181
+          },
+          "2024": {
+            "strategy": -22.905,
+            "benchmark": -20.394,
+            "excess_mean_ann": -3.531
+          },
+          "2025": {
+            "strategy": -2.784,
+            "benchmark": 26.672,
+            "excess_mean_ann": -27.275
+          }
+        },
+        "counters": {
+          "buys": 5540,
+          "sells": 5520,
+          "blocked_buy": 2023,
+          "delayed_sell": 237,
+          "delisted_exit": 4
+        },
+        "turnover_one_way_per_year": 33.746524,
+        "avg_calendar_days_held": 10.411413,
+        "avg_names": 19.72579
+      },
+      "subperiods": {
+        "2018_22": {
+          "excess_mean_ann_pct": -18.030996,
+          "strategy_mean_ann_pct": -15.759841,
+          "sessions": 1232
+        },
+        "2023_25": {
+          "excess_mean_ann_pct": -28.03334,
+          "strategy_mean_ann_pct": -23.154808,
+          "sessions": 730
+        }
+      },
+      "zero_cost_close_entry_excess_ann_pct": -0.626755,
+      "next_open_same_buffer": {
+        "excess_mean_ann_pct": -39.629179,
+        "subperiods": {
+          "2018_22": {
+            "excess_mean_ann_pct": -45.091642,
+            "strategy_mean_ann_pct": -42.820488,
+            "sessions": 1232
+          },
+          "2023_25": {
+            "excess_mean_ann_pct": -30.422949,
+            "strategy_mean_ann_pct": -25.700988,
+            "sessions": 731
+          }
+        }
+      },
+      "passes_precheck": false
+    },
+    "V25B": {
+      "main_close_entry": {
+        "start": "2018-01-02",
+        "end": "2025-12-29",
+        "sessions": 1962,
+        "strategy_cagr_pct": 1.955249,
+        "benchmark_cagr_pct": 0.387424,
+        "strategy_mean_ann_pct": 2.820516,
+        "excess_mean_ann_pct": -0.420764,
+        "excess_ci95_ann_pct": [
+          -13.203606,
+          12.581398
+        ],
+        "excess_p_bootstrap": 0.5216,
+        "excess_t_newey_west": -0.064238,
+        "strategy_sharpe": 0.212779,
+        "strategy_mdd_pct": -50.714039,
+        "avg_invested_pct": 99.126946,
+        "trades": 593,
+        "trade_hit_rate_net_pct": 41.315346,
+        "trade_mean_gross_pct": 1.707298,
+        "trade_mean_net_pct": 0.93712,
+        "cost_per_trade_pct": 0.770178,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -13.422,
+            "benchmark": -12.774,
+            "excess_mean_ann": -2.924
+          },
+          "2019": {
+            "strategy": -9.509,
+            "benchmark": -0.921,
+            "excess_mean_ann": -10.534
+          },
+          "2020": {
+            "strategy": -6.964,
+            "benchmark": 37.489,
+            "excess_mean_ann": -43.971
+          },
+          "2021": {
+            "strategy": 10.075,
+            "benchmark": 15.86,
+            "excess_mean_ann": -6.447
+          },
+          "2022": {
+            "strategy": 9.774,
+            "benchmark": -30.841,
+            "excess_mean_ann": 44.521
+          },
+          "2023": {
+            "strategy": -1.86,
+            "benchmark": 7.343,
+            "excess_mean_ann": -10.143
+          },
+          "2024": {
+            "strategy": 10.279,
+            "benchmark": -20.394,
+            "excess_mean_ann": 31.831
+          },
+          "2025": {
+            "strategy": 21.979,
+            "benchmark": 26.672,
+            "excess_mean_ann": -5.191
+          }
+        },
+        "counters": {
+          "buys": 613,
+          "sells": 593,
+          "blocked_buy": 0,
+          "delayed_sell": 80,
+          "delisted_exit": 5
+        },
+        "turnover_one_way_per_year": 3.732416,
+        "avg_calendar_days_held": 86.29511,
+        "avg_names": 19.991845
+      },
+      "subperiods": {
+        "2018_22": {
+          "excess_mean_ann_pct": -3.941727,
+          "strategy_mean_ann_pct": -1.670572,
+          "sessions": 1232
+        },
+        "2023_25": {
+          "excess_mean_ann_pct": 5.521464,
+          "strategy_mean_ann_pct": 10.399995,
+          "sessions": 730
+        }
+      },
+      "zero_cost_close_entry_excess_ann_pct": 2.477529,
+      "next_open_same_buffer": {
+        "excess_mean_ann_pct": -0.214813,
+        "subperiods": {
+          "2018_22": {
+            "excess_mean_ann_pct": -3.970405,
+            "strategy_mean_ann_pct": -1.699251,
+            "sessions": 1232
+          },
+          "2023_25": {
+            "excess_mean_ann_pct": 6.114722,
+            "strategy_mean_ann_pct": 10.836682,
+            "sessions": 731
+          }
+        }
+      },
+      "passes_precheck": false
+    }
+  },
+  "passed": [],
+  "decision": "NO_GO_DO_NOT_OPEN_2026",
+  "settings": {
+    "top_n": 20,
+    "buffer_k": 60,
+    "fill": "T close (after-hours closing price)"
+  },
+  "holdout_2026_read": false
+}
