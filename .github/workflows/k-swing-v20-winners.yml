@@ -1,0 +1,29 @@
+name: K-SWING v2.0 rising-stock factor profiles
+on:
+  push:
+    branches: [research/k-swing-v20-winner-factor-profiles]
+    paths:
+      - 'research/k_swing/winner_profiles_v20.py'
+      - 'research/k_swing/tests/test_winner_profiles_v20.py'
+      - '.github/workflows/k-swing-v20-winners.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rising-stock-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [profiles, leakage]
+    name: winner-${{ matrix.test }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pytest pandas numpy pyarrow
+      - run: python -m pytest -q research/k_swing/tests/test_winner_profiles_v20.py
+      - run: |
+          echo "Synthetic tests only. Private 2019–22 factor parquet files are not in the repository." >> "$GITHUB_STEP_SUMMARY"
+          echo "No empirical common factors yet; 2026 locked and no trading." >> "$GITHUB_STEP_SUMMARY"
