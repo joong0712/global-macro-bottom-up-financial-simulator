@@ -1,0 +1,4860 @@
+{
+  "protocol": "V24_PROTOCOL.md",
+  "source": {
+    "marcap_ref": "94c138df4bf7376be8d28f979edb14020e2a547a",
+    "files": {
+      "marcap-2016.parquet": "947746ac36de3b3385f4335a6a051fba49007f50dbefe3e0589ec77a3e03f0e2",
+      "marcap-2017.parquet": "a8a40c5013238e2be8e13d52d306e77667efeef5aaeed16fdad38ed27b7755a4",
+      "marcap-2018.parquet": "a03348ab0747972c6a353f52c636494abf216392d401cde823b6388e23f1c443",
+      "marcap-2019.parquet": "7d2f4018558b9409485da83c7f539692ecbb2be206f7a800cc0f3f84cbdbe503",
+      "marcap-2020.parquet": "565f55ef141f58b3ec74c7ccb733fc551b7c6e30fbc7a1da59a78c23e7230806",
+      "marcap-2021.parquet": "ede65acaaa9ee61f56564f6a66840133ff4bbab9d2dbc21437f41b4c8d20199e",
+      "marcap-2022.parquet": "179650f5d1bd6abecb03d1b8eddf5f59c5ca6a0402e7bf2578635790b9ca811c",
+      "marcap-2023.parquet": "08f96990358f5afc4e17321613cef7126e2f0bd4290b82db952b7808d87f9c22",
+      "marcap-2024.parquet": "b0c38943e67637d5faf88429880092cf0f46a394be39860dd3bcd0b04231bccb",
+      "marcap-2025.parquet": "2bfd93c217eb74263bc5020b23fa6debb6b02531c11eaccc2826639bc191559e"
+    }
+  },
+  "data_checks": {
+    "sessions": 2452,
+    "codes": 3213,
+    "adjustment_events_2018_2025": 2439,
+    "adjusted_daily_moves_over_31pct": 504
+  },
+  "primary": {
+    "universe_median_names": 986.0,
+    "dev": {
+      "REV5_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -27.076594,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": -28.532557,
+        "excess_mean_ann_pct": -30.614135,
+        "excess_ci95_ann_pct": [
+          -45.422186,
+          -14.101451
+        ],
+        "excess_p_bootstrap": 0.9998,
+        "excess_t_newey_west": -3.962478,
+        "strategy_sharpe": -1.163724,
+        "strategy_mdd_pct": -83.687952,
+        "avg_invested_pct": 84.984459,
+        "trades": 24586,
+        "trade_hit_rate_net_pct": 41.019279,
+        "trade_mean_gross_pct": -0.125682,
+        "trade_mean_net_pct": -0.752204,
+        "cost_per_trade_pct": 0.626522,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -25.649,
+            "benchmark": -14.642,
+            "excess_mean_ann": -12.349
+          },
+          "2019": {
+            "strategy": -37.286,
+            "benchmark": -0.921,
+            "excess_mean_ann": -46.549
+          },
+          "2020": {
+            "strategy": 9.698,
+            "benchmark": 37.489,
+            "excess_mean_ann": -25.044
+          },
+          "2021": {
+            "strategy": -32.379,
+            "benchmark": 15.86,
+            "excess_mean_ann": -54.494
+          },
+          "2022": {
+            "strategy": -38.802,
+            "benchmark": -30.841,
+            "excess_mean_ann": -13.968
+          },
+          "2023": {
+            "strategy": 0.398,
+            "benchmark": 1.27,
+            "excess_mean_ann": -45.126
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24586,
+          "blocked_entry": 54,
+          "delayed_exit": 106,
+          "delisted_exit": 3,
+          "forced_window_end_exit": 36
+        }
+      },
+      "REV5_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -22.120563,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": -21.672133,
+        "excess_mean_ann_pct": -24.468255,
+        "excess_ci95_ann_pct": [
+          -36.956059,
+          -10.830395
+        ],
+        "excess_p_bootstrap": 1.0,
+        "excess_t_newey_west": -3.739249,
+        "strategy_sharpe": -0.844128,
+        "strategy_mdd_pct": -78.561702,
+        "avg_invested_pct": 90.911554,
+        "trades": 24586,
+        "trade_hit_rate_net_pct": 39.697389,
+        "trade_mean_gross_pct": -0.480723,
+        "trade_mean_net_pct": -1.10551,
+        "cost_per_trade_pct": 0.624787,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -21.659,
+            "benchmark": -14.642,
+            "excess_mean_ann": -7.22
+          },
+          "2019": {
+            "strategy": -25.91,
+            "benchmark": -0.921,
+            "excess_mean_ann": -29.142
+          },
+          "2020": {
+            "strategy": 13.547,
+            "benchmark": 37.489,
+            "excess_mean_ann": -20.761
+          },
+          "2021": {
+            "strategy": -32.048,
+            "benchmark": 15.86,
+            "excess_mean_ann": -53.974
+          },
+          "2022": {
+            "strategy": -35.04,
+            "benchmark": -30.841,
+            "excess_mean_ann": -7.216
+          },
+          "2023": {
+            "strategy": 0.353,
+            "benchmark": 4.909,
+            "excess_mean_ann": -113.25
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24586,
+          "blocked_entry": 54,
+          "delayed_exit": 163,
+          "delisted_exit": 9,
+          "forced_window_end_exit": 53
+        }
+      },
+      "HIGH52_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -32.806975,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": -37.148426,
+        "excess_mean_ann_pct": -39.230004,
+        "excess_ci95_ann_pct": [
+          -54.759422,
+          -23.916223
+        ],
+        "excess_p_bootstrap": 1.0,
+        "excess_t_newey_west": -4.869552,
+        "strategy_sharpe": -1.63581,
+        "strategy_mdd_pct": -86.579865,
+        "avg_invested_pct": 79.189264,
+        "trades": 24502,
+        "trade_hit_rate_net_pct": 40.457922,
+        "trade_mean_gross_pct": -0.086828,
+        "trade_mean_net_pct": -0.730948,
+        "cost_per_trade_pct": 0.64412,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -42.353,
+            "benchmark": -14.642,
+            "excess_mean_ann": -41.402
+          },
+          "2019": {
+            "strategy": -26.156,
+            "benchmark": -0.921,
+            "excess_mean_ann": -30.585
+          },
+          "2020": {
+            "strategy": -23.137,
+            "benchmark": 37.489,
+            "excess_mean_ann": -59.963
+          },
+          "2021": {
+            "strategy": -21.617,
+            "benchmark": 15.86,
+            "excess_mean_ann": -39.615
+          },
+          "2022": {
+            "strategy": -42.876,
+            "benchmark": -30.841,
+            "excess_mean_ann": -20.912
+          },
+          "2023": {
+            "strategy": -2.9,
+            "benchmark": 1.27,
+            "excess_mean_ann": -212.809
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24502,
+          "blocked_entry": 138,
+          "delayed_exit": 55,
+          "delisted_exit": 3,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -16.300555,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": -15.30356,
+        "excess_mean_ann_pct": -18.099681,
+        "excess_ci95_ann_pct": [
+          -31.041764,
+          -5.159264
+        ],
+        "excess_p_bootstrap": 0.9964,
+        "excess_t_newey_west": -2.599516,
+        "strategy_sharpe": -0.687178,
+        "strategy_mdd_pct": -65.747805,
+        "avg_invested_pct": 88.788122,
+        "trades": 24502,
+        "trade_hit_rate_net_pct": 42.576116,
+        "trade_mean_gross_pct": 0.046397,
+        "trade_mean_net_pct": -0.598205,
+        "cost_per_trade_pct": 0.644602,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -31.333,
+            "benchmark": -14.642,
+            "excess_mean_ann": -23.261
+          },
+          "2019": {
+            "strategy": -17.499,
+            "benchmark": -0.921,
+            "excess_mean_ann": -19.324
+          },
+          "2020": {
+            "strategy": 7.107,
+            "benchmark": 37.489,
+            "excess_mean_ann": -26.207
+          },
+          "2021": {
+            "strategy": 1.043,
+            "benchmark": 15.86,
+            "excess_mean_ann": -14.097
+          },
+          "2022": {
+            "strategy": -30.537,
+            "benchmark": -30.841,
+            "excess_mean_ann": -1.095
+          },
+          "2023": {
+            "strategy": -2.242,
+            "benchmark": 4.909,
+            "excess_mean_ann": -179.061
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24502,
+          "blocked_entry": 138,
+          "delayed_exit": 43,
+          "delisted_exit": 6,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -30.098612,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": -34.903934,
+        "excess_mean_ann_pct": -36.985512,
+        "excess_ci95_ann_pct": [
+          -53.292494,
+          -20.54949
+        ],
+        "excess_p_bootstrap": 1.0,
+        "excess_t_newey_west": -4.299378,
+        "strategy_sharpe": -2.642336,
+        "strategy_mdd_pct": -83.318438,
+        "avg_invested_pct": 79.747415,
+        "trades": 24637,
+        "trade_hit_rate_net_pct": 38.186468,
+        "trade_mean_gross_pct": 0.019593,
+        "trade_mean_net_pct": -0.688463,
+        "cost_per_trade_pct": 0.708057,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -33.163,
+            "benchmark": -14.642,
+            "excess_mean_ann": -27.566
+          },
+          "2019": {
+            "strategy": -30.04,
+            "benchmark": -0.921,
+            "excess_mean_ann": -36.845
+          },
+          "2020": {
+            "strategy": -31.245,
+            "benchmark": 37.489,
+            "excess_mean_ann": -74.874
+          },
+          "2021": {
+            "strategy": -22.056,
+            "benchmark": 15.86,
+            "excess_mean_ann": -41.492
+          },
+          "2022": {
+            "strategy": -29.873,
+            "benchmark": -30.841,
+            "excess_mean_ann": -1.346
+          },
+          "2023": {
+            "strategy": -1.735,
+            "benchmark": 1.27,
+            "excess_mean_ann": -152.303
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24637,
+          "blocked_entry": 3,
+          "delayed_exit": 6,
+          "delisted_exit": 5,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -16.396318,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": -16.954749,
+        "excess_mean_ann_pct": -19.75087,
+        "excess_ci95_ann_pct": [
+          -35.815327,
+          -3.589175
+        ],
+        "excess_p_bootstrap": 0.9938,
+        "excess_t_newey_west": -2.349531,
+        "strategy_sharpe": -1.236154,
+        "strategy_mdd_pct": -61.573775,
+        "avg_invested_pct": 89.33289,
+        "trades": 24637,
+        "trade_hit_rate_net_pct": 41.22661,
+        "trade_mean_gross_pct": 0.043439,
+        "trade_mean_net_pct": -0.664444,
+        "cost_per_trade_pct": 0.707882,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -22.34,
+            "benchmark": -14.642,
+            "excess_mean_ann": -11.998
+          },
+          "2019": {
+            "strategy": -17.705,
+            "benchmark": -0.921,
+            "excess_mean_ann": -20.182
+          },
+          "2020": {
+            "strategy": -16.058,
+            "benchmark": 37.489,
+            "excess_mean_ann": -54.439
+          },
+          "2021": {
+            "strategy": -7.189,
+            "benchmark": 15.86,
+            "excess_mean_ann": -23.707
+          },
+          "2022": {
+            "strategy": -16.859,
+            "benchmark": -30.841,
+            "excess_mean_ann": 16.114
+          },
+          "2023": {
+            "strategy": 0.006,
+            "benchmark": 4.909,
+            "excess_mean_ann": -121.443
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24637,
+          "blocked_entry": 3,
+          "delayed_exit": 6,
+          "delisted_exit": 10,
+          "forced_window_end_exit": 0
+        }
+      }
+    },
+    "validation": {
+      "REV5_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -32.384748,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -36.317499,
+        "excess_mean_ann_pct": -41.637864,
+        "excess_ci95_ann_pct": [
+          -62.431864,
+          -20.887331
+        ],
+        "excess_p_bootstrap": 0.9998,
+        "excess_t_newey_west": -3.936483,
+        "strategy_sharpe": -1.54224,
+        "strategy_mdd_pct": -71.576812,
+        "avg_invested_pct": 83.98249,
+        "trades": 14497,
+        "trade_hit_rate_net_pct": 39.959992,
+        "trade_mean_gross_pct": -0.282573,
+        "trade_mean_net_pct": -0.830868,
+        "cost_per_trade_pct": 0.548296,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -39.318,
+            "benchmark": 9.216,
+            "excess_mean_ann": -59.024
+          },
+          "2024": {
+            "strategy": -32.453,
+            "benchmark": -20.394,
+            "excess_mean_ann": -17.122
+          },
+          "2025": {
+            "strategy": -21.475,
+            "benchmark": 26.121,
+            "excess_mean_ann": -48.827
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14497,
+          "blocked_entry": 23,
+          "delayed_exit": 53,
+          "delisted_exit": 27,
+          "forced_window_end_exit": 0
+        }
+      },
+      "REV5_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -26.48673,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -28.161232,
+        "excess_mean_ann_pct": -33.481597,
+        "excess_ci95_ann_pct": [
+          -50.466403,
+          -16.031848
+        ],
+        "excess_p_bootstrap": 1.0,
+        "excess_t_newey_west": -3.73178,
+        "strategy_sharpe": -1.238498,
+        "strategy_mdd_pct": -63.505077,
+        "avg_invested_pct": 90.562098,
+        "trades": 14397,
+        "trade_hit_rate_net_pct": 38.56359,
+        "trade_mean_gross_pct": -0.689444,
+        "trade_mean_net_pct": -1.235351,
+        "cost_per_trade_pct": 0.545907,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -31.687,
+            "benchmark": 9.216,
+            "excess_mean_ann": -47.158
+          },
+          "2024": {
+            "strategy": -30.579,
+            "benchmark": -20.394,
+            "excess_mean_ann": -14.135
+          },
+          "2025": {
+            "strategy": -13.524,
+            "benchmark": 26.121,
+            "excess_mean_ann": -39.199
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14397,
+          "blocked_entry": 23,
+          "delayed_exit": 69,
+          "delisted_exit": 52,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -20.004269,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -20.489409,
+        "excess_mean_ann_pct": -25.809774,
+        "excess_ci95_ann_pct": [
+          -42.366696,
+          -8.93368
+        ],
+        "excess_p_bootstrap": 0.9984,
+        "excess_t_newey_west": -2.894198,
+        "strategy_sharpe": -1.075457,
+        "strategy_mdd_pct": -58.949722,
+        "avg_invested_pct": 79.066491,
+        "trades": 14439,
+        "trade_hit_rate_net_pct": 41.91426,
+        "trade_mean_gross_pct": 0.151631,
+        "trade_mean_net_pct": -0.421495,
+        "cost_per_trade_pct": 0.573125,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -20.391,
+            "benchmark": 9.216,
+            "excess_mean_ann": -32.697
+          },
+          "2024": {
+            "strategy": -36.515,
+            "benchmark": -20.394,
+            "excess_mean_ann": -24.143
+          },
+          "2025": {
+            "strategy": 3.651,
+            "benchmark": 26.121,
+            "excess_mean_ann": -20.545
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14439,
+          "blocked_entry": 81,
+          "delayed_exit": 37,
+          "delisted_exit": 11,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -0.831905,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": 0.925461,
+        "excess_mean_ann_pct": -4.394904,
+        "excess_ci95_ann_pct": [
+          -21.283301,
+          12.344262
+        ],
+        "excess_p_bootstrap": 0.7196,
+        "excess_t_newey_west": -0.50558,
+        "strategy_sharpe": 0.049387,
+        "strategy_mdd_pct": -42.992923,
+        "avg_invested_pct": 88.190214,
+        "trades": 14341,
+        "trade_hit_rate_net_pct": 43.769612,
+        "trade_mean_gross_pct": 0.576698,
+        "trade_mean_net_pct": 0.002285,
+        "cost_per_trade_pct": 0.574413,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -0.806,
+            "benchmark": 9.216,
+            "excess_mean_ann": -10.186
+          },
+          "2024": {
+            "strategy": -24.088,
+            "benchmark": -20.394,
+            "excess_mean_ann": -5.627
+          },
+          "2025": {
+            "strategy": 29.627,
+            "benchmark": 26.121,
+            "excess_mean_ann": 2.686
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14341,
+          "blocked_entry": 79,
+          "delayed_exit": 57,
+          "delisted_exit": 22,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -18.256545,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -19.389141,
+        "excess_mean_ann_pct": -24.709506,
+        "excess_ci95_ann_pct": [
+          -42.126304,
+          -7.101532
+        ],
+        "excess_p_bootstrap": 0.9976,
+        "excess_t_newey_west": -2.717545,
+        "strategy_sharpe": -1.575977,
+        "strategy_mdd_pct": -47.018597,
+        "avg_invested_pct": 79.567225,
+        "trades": 14517,
+        "trade_hit_rate_net_pct": 40.683337,
+        "trade_mean_gross_pct": 0.272832,
+        "trade_mean_net_pct": -0.38346,
+        "cost_per_trade_pct": 0.656293,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -24.341,
+            "benchmark": 9.216,
+            "excess_mean_ann": -38.867
+          },
+          "2024": {
+            "strategy": -18.042,
+            "benchmark": -20.394,
+            "excess_mean_ann": 1.181
+          },
+          "2025": {
+            "strategy": -10.063,
+            "benchmark": 26.121,
+            "excess_mean_ann": -36.539
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14517,
+          "blocked_entry": 3,
+          "delayed_exit": 11,
+          "delisted_exit": 12,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -3.434348,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -2.682347,
+        "excess_mean_ann_pct": -8.002712,
+        "excess_ci95_ann_pct": [
+          -25.700747,
+          9.977806
+        ],
+        "excess_p_bootstrap": 0.8016,
+        "excess_t_newey_west": -0.87179,
+        "strategy_sharpe": -0.211044,
+        "strategy_mdd_pct": -25.327157,
+        "avg_invested_pct": 88.815983,
+        "trades": 14417,
+        "trade_hit_rate_net_pct": 45.259069,
+        "trade_mean_gross_pct": 0.558103,
+        "trade_mean_net_pct": -0.099877,
+        "cost_per_trade_pct": 0.65798,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -13.041,
+            "benchmark": 9.216,
+            "excess_mean_ann": -24.49
+          },
+          "2024": {
+            "strategy": -4.564,
+            "benchmark": -20.394,
+            "excess_mean_ann": 16.974
+          },
+          "2025": {
+            "strategy": 8.895,
+            "benchmark": 26.121,
+            "excess_mean_ann": -16.563
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14417,
+          "blocked_entry": 3,
+          "delayed_exit": 11,
+          "delisted_exit": 27,
+          "forced_window_end_exit": 0
+        }
+      }
+    }
+  },
+  "verdict": {
+    "dev_holm": {
+      "LOWVOL_H10": {
+        "p": 0.9938,
+        "p_holm": 1.0,
+        "reject": false
+      },
+      "HIGH52_H10": {
+        "p": 0.9964,
+        "p_holm": 1.0,
+        "reject": false
+      },
+      "REV5_H5": {
+        "p": 0.9998,
+        "p_holm": 1.0,
+        "reject": false
+      },
+      "HIGH52_H5": {
+        "p": 1.0,
+        "p_holm": 1.0,
+        "reject": false
+      },
+      "LOWVOL_H5": {
+        "p": 1.0,
+        "p_holm": 1.0,
+        "reject": false
+      },
+      "REV5_H10": {
+        "p": 1.0,
+        "p_holm": 1.0,
+        "reject": false
+      }
+    },
+    "dev_pass": [],
+    "validation_holm": {},
+    "validation_pass": [],
+    "decision": "NO_GO",
+    "holdout_2026_read": false
+  },
+  "gross_diagnostic": {
+    "universe_median_names": 986.0,
+    "dev": {
+      "REV5_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -8.548885,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": -5.47323,
+        "excess_mean_ann_pct": -7.554808,
+        "excess_ci95_ann_pct": [
+          -22.396622,
+          8.70576
+        ],
+        "excess_p_bootstrap": 0.8364,
+        "excess_t_newey_west": -0.992009,
+        "strategy_sharpe": -0.208557,
+        "strategy_mdd_pct": -59.098988,
+        "avg_invested_pct": 83.883835,
+        "trades": 24586,
+        "trade_hit_rate_net_pct": 43.825754,
+        "trade_mean_gross_pct": -0.125682,
+        "trade_mean_net_pct": -0.125682,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": 0.697,
+            "benchmark": -14.642,
+            "excess_mean_ann": 19.138
+          },
+          "2019": {
+            "strategy": -19.852,
+            "benchmark": -0.921,
+            "excess_mean_ann": -21.253
+          },
+          "2020": {
+            "strategy": 43.304,
+            "benchmark": 37.489,
+            "excess_mean_ann": 2.908
+          },
+          "2021": {
+            "strategy": -18.153,
+            "benchmark": 15.86,
+            "excess_mean_ann": -34.724
+          },
+          "2022": {
+            "strategy": -32.555,
+            "benchmark": -30.841,
+            "excess_mean_ann": -3.279
+          },
+          "2023": {
+            "strategy": 1.047,
+            "benchmark": 1.27,
+            "excess_mean_ann": -12.589
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24586,
+          "blocked_entry": 54,
+          "delayed_exit": 106,
+          "delisted_exit": 3,
+          "forced_window_end_exit": 36
+        }
+      },
+      "REV5_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -11.486414,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": -8.718995,
+        "excess_mean_ann_pct": -11.515117,
+        "excess_ci95_ann_pct": [
+          -24.104387,
+          2.196424
+        ],
+        "excess_p_bootstrap": 0.9602,
+        "excess_t_newey_west": -1.768553,
+        "strategy_sharpe": -0.331451,
+        "strategy_mdd_pct": -62.793483,
+        "avg_invested_pct": 90.680764,
+        "trades": 24586,
+        "trade_hit_rate_net_pct": 41.722932,
+        "trade_mean_gross_pct": -0.480723,
+        "trade_mean_net_pct": -0.480723,
+        "cost_per_trade_pct": 0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -8.401,
+            "benchmark": -14.642,
+            "excess_mean_ann": 8.997
+          },
+          "2019": {
+            "strategy": -14.707,
+            "benchmark": -0.921,
+            "excess_mean_ann": -14.665
+          },
+          "2020": {
+            "strategy": 30.497,
+            "benchmark": 37.489,
+            "excess_mean_ann": -6.331
+          },
+          "2021": {
+            "strategy": -24.51,
+            "benchmark": 15.86,
+            "excess_mean_ann": -43.154
+          },
+          "2022": {
+            "strategy": -29.39,
+            "benchmark": -30.841,
+            "excess_mean_ann": 1.623
+          },
+          "2023": {
+            "strategy": 0.898,
+            "benchmark": 4.909,
+            "excess_mean_ann": -99.597
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24586,
+          "blocked_entry": 54,
+          "delayed_exit": 163,
+          "delisted_exit": 9,
+          "forced_window_end_exit": 53
+        }
+      },
+      "HIGH52_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -7.285341,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": -4.982638,
+        "excess_mean_ann_pct": -7.064216,
+        "excess_ci95_ann_pct": [
+          -22.816402,
+          8.311246
+        ],
+        "excess_p_bootstrap": 0.8068,
+        "excess_t_newey_west": -0.875173,
+        "strategy_sharpe": -0.219264,
+        "strategy_mdd_pct": -48.269171,
+        "avg_invested_pct": 79.170521,
+        "trades": 24502,
+        "trade_hit_rate_net_pct": 44.751449,
+        "trade_mean_gross_pct": -0.086828,
+        "trade_mean_net_pct": -0.086828,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -19.116,
+            "benchmark": -14.642,
+            "excess_mean_ann": -6.332
+          },
+          "2019": {
+            "strategy": 3.439,
+            "benchmark": -0.921,
+            "excess_mean_ann": 3.925
+          },
+          "2020": {
+            "strategy": 4.093,
+            "benchmark": 37.489,
+            "excess_mean_ann": -29.165
+          },
+          "2021": {
+            "strategy": 5.587,
+            "benchmark": 15.86,
+            "excess_mean_ann": -9.356
+          },
+          "2022": {
+            "strategy": -23.076,
+            "benchmark": -30.841,
+            "excess_mean_ann": 9.524
+          },
+          "2023": {
+            "strategy": -2.448,
+            "benchmark": 1.27,
+            "excess_mean_ann": -189.566
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24502,
+          "blocked_entry": 138,
+          "delayed_exit": 55,
+          "delisted_exit": 3,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -1.756611,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": 0.711508,
+        "excess_mean_ann_pct": -2.084613,
+        "excess_ci95_ann_pct": [
+          -15.059451,
+          10.957426
+        ],
+        "excess_p_bootstrap": 0.621,
+        "excess_t_newey_west": -0.298957,
+        "strategy_sharpe": 0.031941,
+        "strategy_mdd_pct": -52.346863,
+        "avg_invested_pct": 88.774783,
+        "trades": 24502,
+        "trade_hit_rate_net_pct": 45.616684,
+        "trade_mean_gross_pct": 0.046397,
+        "trade_mean_net_pct": 0.046397,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -18.904,
+            "benchmark": -14.642,
+            "excess_mean_ann": -6.028
+          },
+          "2019": {
+            "strategy": -2.512,
+            "benchmark": -0.921,
+            "excess_mean_ann": -2.229
+          },
+          "2020": {
+            "strategy": 24.71,
+            "benchmark": 37.489,
+            "excess_mean_ann": -10.739
+          },
+          "2021": {
+            "strategy": 17.374,
+            "benchmark": 15.86,
+            "excess_mean_ann": 1.132
+          },
+          "2022": {
+            "strategy": -19.348,
+            "benchmark": -30.841,
+            "excess_mean_ann": 14.185
+          },
+          "2023": {
+            "strategy": -1.813,
+            "benchmark": 4.909,
+            "excess_mean_ann": -168.06
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24502,
+          "blocked_entry": 138,
+          "delayed_exit": 43,
+          "delisted_exit": 6,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H5": {
+        "start": "2018-01-03",
+        "end": "2023-01-06",
+        "sessions": 1236,
+        "strategy_cagr_pct": -0.162147,
+        "benchmark_cagr_pct": -1.178193,
+        "strategy_mean_ann_pct": 0.717534,
+        "excess_mean_ann_pct": -1.364044,
+        "excess_ci95_ann_pct": [
+          -17.754674,
+          15.071382
+        ],
+        "excess_p_bootstrap": 0.5642,
+        "excess_t_newey_west": -0.15839,
+        "strategy_sharpe": 0.05426,
+        "strategy_mdd_pct": -39.15751,
+        "avg_invested_pct": 79.727296,
+        "trades": 24637,
+        "trade_hit_rate_net_pct": 47.972562,
+        "trade_mean_gross_pct": 0.019593,
+        "trade_mean_net_pct": 0.019593,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -4.875,
+            "benchmark": -14.642,
+            "excess_mean_ann": 9.002
+          },
+          "2019": {
+            "strategy": -2.472,
+            "benchmark": -0.921,
+            "excess_mean_ann": -2.839
+          },
+          "2020": {
+            "strategy": -2.379,
+            "benchmark": 37.489,
+            "excess_mean_ann": -39.283
+          },
+          "2021": {
+            "strategy": 11.945,
+            "benchmark": 15.86,
+            "excess_mean_ann": -4.716
+          },
+          "2022": {
+            "strategy": -0.888,
+            "benchmark": -30.841,
+            "excess_mean_ann": 34.066
+          },
+          "2023": {
+            "strategy": -1.272,
+            "benchmark": 1.27,
+            "excess_mean_ann": -128.732
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24637,
+          "blocked_entry": 3,
+          "delayed_exit": 6,
+          "delisted_exit": 5,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H10": {
+        "start": "2018-01-03",
+        "end": "2023-01-13",
+        "sessions": 1241,
+        "strategy_cagr_pct": -0.163378,
+        "benchmark_cagr_pct": -0.4625,
+        "strategy_mean_ann_pct": 0.783998,
+        "excess_mean_ann_pct": -2.012124,
+        "excess_ci95_ann_pct": [
+          -18.119163,
+          14.232966
+        ],
+        "excess_p_bootstrap": 0.6028,
+        "excess_t_newey_west": -0.238988,
+        "strategy_sharpe": 0.05713,
+        "strategy_mdd_pct": -42.260194,
+        "avg_invested_pct": 89.322027,
+        "trades": 24637,
+        "trade_hit_rate_net_pct": 47.854852,
+        "trade_mean_gross_pct": 0.043439,
+        "trade_mean_net_pct": 0.043439,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2018": {
+            "strategy": -7.579,
+            "benchmark": -14.642,
+            "excess_mean_ann": 6.036
+          },
+          "2019": {
+            "strategy": -2.862,
+            "benchmark": -0.921,
+            "excess_mean_ann": -3.203
+          },
+          "2020": {
+            "strategy": 0.007,
+            "benchmark": 37.489,
+            "excess_mean_ann": -36.649
+          },
+          "2021": {
+            "strategy": 11.253,
+            "benchmark": 15.86,
+            "excess_mean_ann": -5.288
+          },
+          "2022": {
+            "strategy": -1.133,
+            "benchmark": -30.841,
+            "excess_mean_ann": 33.852
+          },
+          "2023": {
+            "strategy": 0.449,
+            "benchmark": 4.909,
+            "excess_mean_ann": -110.317
+          }
+        },
+        "counters": {
+          "signals": 1232,
+          "slots": 24640,
+          "filled": 24637,
+          "blocked_entry": 3,
+          "delayed_exit": 6,
+          "delisted_exit": 10,
+          "forced_window_end_exit": 0
+        }
+      }
+    },
+    "validation": {
+      "REV5_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -16.005258,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -14.401016,
+        "excess_mean_ann_pct": -19.721381,
+        "excess_ci95_ann_pct": [
+          -40.651111,
+          1.140658
+        ],
+        "excess_p_bootstrap": 0.967,
+        "excess_t_newey_west": -1.859574,
+        "strategy_sharpe": -0.585055,
+        "strategy_mdd_pct": -50.257872,
+        "avg_invested_pct": 83.04825,
+        "trades": 14497,
+        "trade_hit_rate_net_pct": 42.270815,
+        "trade_mean_gross_pct": -0.282573,
+        "trade_mean_net_pct": -0.282573,
+        "cost_per_trade_pct": 0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -22.509,
+            "benchmark": 9.216,
+            "excess_mean_ann": -33.733
+          },
+          "2024": {
+            "strategy": -18.802,
+            "benchmark": -20.394,
+            "excess_mean_ann": 2.242
+          },
+          "2025": {
+            "strategy": -4.109,
+            "benchmark": 26.121,
+            "excess_mean_ann": -27.739
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14497,
+          "blocked_entry": 23,
+          "delayed_exit": 53,
+          "delisted_exit": 27,
+          "forced_window_end_exit": 0
+        }
+      },
+      "REV5_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": -17.665859,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": -16.746771,
+        "excess_mean_ann_pct": -22.067136,
+        "excess_ci95_ann_pct": [
+          -38.893793,
+          -4.927237
+        ],
+        "excess_p_bootstrap": 0.9942,
+        "excess_t_newey_west": -2.471696,
+        "strategy_sharpe": -0.723231,
+        "strategy_mdd_pct": -50.561883,
+        "avg_invested_pct": 90.356873,
+        "trades": 14397,
+        "trade_hit_rate_net_pct": 40.175036,
+        "trade_mean_gross_pct": -0.689444,
+        "trade_mean_net_pct": -0.689444,
+        "cost_per_trade_pct": 0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": -22.52,
+            "benchmark": 9.216,
+            "excess_mean_ann": -34.151
+          },
+          "2024": {
+            "strategy": -23.254,
+            "benchmark": -20.394,
+            "excess_mean_ann": -3.653
+          },
+          "2025": {
+            "strategy": -4.235,
+            "benchmark": 26.121,
+            "excess_mean_ann": -28.449
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14397,
+          "blocked_entry": 23,
+          "delayed_exit": 69,
+          "delisted_exit": 52,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": 6.32018,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": 7.953353,
+        "excess_mean_ann_pct": 2.632988,
+        "excess_ci95_ann_pct": [
+          -14.069498,
+          19.593669
+        ],
+        "excess_p_bootstrap": 0.393,
+        "excess_t_newey_west": 0.295138,
+        "strategy_sharpe": 0.416797,
+        "strategy_mdd_pct": -29.892666,
+        "avg_invested_pct": 79.053722,
+        "trades": 14439,
+        "trade_hit_rate_net_pct": 46.596025,
+        "trade_mean_gross_pct": 0.151631,
+        "trade_mean_net_pct": 0.151631,
+        "cost_per_trade_pct": 0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": 5.655,
+            "benchmark": 9.216,
+            "excess_mean_ann": -3.471
+          },
+          "2024": {
+            "strategy": -16.499,
+            "benchmark": -20.394,
+            "excess_mean_ann": 4.132
+          },
+          "2025": {
+            "strategy": 35.369,
+            "benchmark": 26.121,
+            "excess_mean_ann": 7.276
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14439,
+          "blocked_entry": 81,
+          "delayed_exit": 37,
+          "delisted_exit": 11,
+          "forced_window_end_exit": 0
+        }
+      },
+      "HIGH52_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": 14.169917,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": 15.016773,
+        "excess_mean_ann_pct": 9.696408,
+        "excess_ci95_ann_pct": [
+          -7.218434,
+          26.415185
+        ],
+        "excess_p_bootstrap": 0.1396,
+        "excess_t_newey_west": 1.114533,
+        "strategy_sharpe": 0.800995,
+        "strategy_mdd_pct": -28.198621,
+        "avg_invested_pct": 88.184326,
+        "trades": 14341,
+        "trade_hit_rate_net_pct": 47.193362,
+        "trade_mean_gross_pct": 0.576698,
+        "trade_mean_net_pct": 0.576698,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": 14.004,
+            "benchmark": 9.216,
+            "excess_mean_ann": 4.19
+          },
+          "2024": {
+            "strategy": -12.999,
+            "benchmark": -20.394,
+            "excess_mean_ann": 8.445
+          },
+          "2025": {
+            "strategy": 48.005,
+            "benchmark": 26.121,
+            "excess_mean_ann": 16.51
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14341,
+          "blocked_entry": 79,
+          "delayed_exit": 57,
+          "delisted_exit": 22,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H5": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": 13.524992,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": 13.450837,
+        "excess_mean_ann_pct": 8.130472,
+        "excess_ci95_ann_pct": [
+          -9.33557,
+          25.956857
+        ],
+        "excess_p_bootstrap": 0.1858,
+        "excess_t_newey_west": 0.893952,
+        "strategy_sharpe": 1.091798,
+        "strategy_mdd_pct": -17.422362,
+        "avg_invested_pct": 79.553368,
+        "trades": 14517,
+        "trade_hit_rate_net_pct": 51.663567,
+        "trade_mean_gross_pct": 0.272832,
+        "trade_mean_net_pct": 0.272832,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": 2.308,
+            "benchmark": 9.216,
+            "excess_mean_ann": -7.719
+          },
+          "2024": {
+            "strategy": 13.78,
+            "benchmark": -20.394,
+            "excess_mean_ann": 35.06
+          },
+          "2025": {
+            "strategy": 24.055,
+            "benchmark": 26.121,
+            "excess_mean_ann": -3.041
+          }
+        },
+        "counters": {
+          "signals": 726,
+          "slots": 14520,
+          "filled": 14517,
+          "blocked_entry": 3,
+          "delayed_exit": 11,
+          "delisted_exit": 12,
+          "forced_window_end_exit": 0
+        }
+      },
+      "LOWVOL_H10": {
+        "start": "2023-01-03",
+        "end": "2025-12-30",
+        "sessions": 730,
+        "strategy_cagr_pct": 13.663214,
+        "benchmark_cagr_pct": 3.232254,
+        "strategy_mean_ann_pct": 13.622746,
+        "excess_mean_ann_pct": 8.302381,
+        "excess_ci95_ann_pct": [
+          -9.312056,
+          26.268937
+        ],
+        "excess_p_bootstrap": 0.1848,
+        "excess_t_newey_west": 0.903596,
+        "strategy_sharpe": 1.071204,
+        "strategy_mdd_pct": -17.883803,
+        "avg_invested_pct": 88.808455,
+        "trades": 14417,
+        "trade_hit_rate_net_pct": 52.562947,
+        "trade_mean_gross_pct": 0.558103,
+        "trade_mean_net_pct": 0.558103,
+        "cost_per_trade_pct": -0.0,
+        "yearly_pct": {
+          "2023": {
+            "strategy": 0.917,
+            "benchmark": 9.216,
+            "excess_mean_ann": -9.119
+          },
+          "2024": {
+            "strategy": 12.417,
+            "benchmark": -20.394,
+            "excess_mean_ann": 33.891
+          },
+          "2025": {
+            "strategy": 27.739,
+            "benchmark": 26.121,
+            "excess_mean_ann": 0.068
+          }
+        },
+        "counters": {
+          "signals": 721,
+          "slots": 14420,
+          "filled": 14417,
+          "blocked_entry": 3,
+          "delayed_exit": 11,
+          "delisted_exit": 27,
+          "forced_window_end_exit": 0
+        }
+      }
+    }
+  },
+  "sensitivity": {
+    "N10": {
+      "universe_median_names": 986.0,
+      "dev": {
+        "REV5_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -27.362863,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -29.220185,
+          "excess_mean_ann_pct": -31.301763,
+          "excess_ci95_ann_pct": [
+            -48.270323,
+            -12.983753
+          ],
+          "excess_p_bootstrap": 0.9996,
+          "excess_t_newey_west": -3.411768,
+          "strategy_sharpe": -1.255409,
+          "strategy_mdd_pct": -84.263157,
+          "avg_invested_pct": 87.10732,
+          "trades": 12277,
+          "trade_hit_rate_net_pct": 40.742852,
+          "trade_mean_gross_pct": -0.218308,
+          "trade_mean_net_pct": -0.838636,
+          "cost_per_trade_pct": 0.620328,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -35.05,
+              "benchmark": -14.642,
+              "excess_mean_ann": -25.862
+            },
+            "2019": {
+              "strategy": -37.279,
+              "benchmark": -0.921,
+              "excess_mean_ann": -46.516
+            },
+            "2020": {
+              "strategy": 6.622,
+              "benchmark": 37.489,
+              "excess_mean_ann": -29.252
+            },
+            "2021": {
+              "strategy": -29.69,
+              "benchmark": 15.86,
+              "excess_mean_ann": -50.683
+            },
+            "2022": {
+              "strategy": -31.782,
+              "benchmark": -30.841,
+              "excess_mean_ann": -3.362
+            },
+            "2023": {
+              "strategy": 0.06,
+              "benchmark": 1.27,
+              "excess_mean_ann": -62.137
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12277,
+            "blocked_entry": 43,
+            "delayed_exit": 72,
+            "delisted_exit": 2,
+            "forced_window_end_exit": 29
+          }
+        },
+        "REV5_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -23.055006,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -23.085466,
+          "excess_mean_ann_pct": -25.881588,
+          "excess_ci95_ann_pct": [
+            -39.940361,
+            -11.068045
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.42468,
+          "strategy_sharpe": -0.928854,
+          "strategy_mdd_pct": -79.058545,
+          "avg_invested_pct": 91.620112,
+          "trades": 12277,
+          "trade_hit_rate_net_pct": 39.822432,
+          "trade_mean_gross_pct": -0.624053,
+          "trade_mean_net_pct": -1.242433,
+          "cost_per_trade_pct": 0.618379,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.42,
+              "benchmark": -14.642,
+              "excess_mean_ann": -16.398
+            },
+            "2019": {
+              "strategy": -23.322,
+              "benchmark": -0.921,
+              "excess_mean_ann": -25.48
+            },
+            "2020": {
+              "strategy": 6.996,
+              "benchmark": 37.489,
+              "excess_mean_ann": -27.696
+            },
+            "2021": {
+              "strategy": -33.265,
+              "benchmark": 15.86,
+              "excess_mean_ann": -55.856
+            },
+            "2022": {
+              "strategy": -29.595,
+              "benchmark": -30.841,
+              "excess_mean_ann": 0.616
+            },
+            "2023": {
+              "strategy": -0.301,
+              "benchmark": 4.909,
+              "excess_mean_ann": -129.691
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12277,
+            "blocked_entry": 43,
+            "delayed_exit": 123,
+            "delisted_exit": 2,
+            "forced_window_end_exit": 40
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -35.551611,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -40.329542,
+          "excess_mean_ann_pct": -42.41112,
+          "excess_ci95_ann_pct": [
+            -61.635365,
+            -23.60475
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.375817,
+          "strategy_sharpe": -1.508671,
+          "strategy_mdd_pct": -89.779992,
+          "avg_invested_pct": 78.719142,
+          "trades": 12195,
+          "trade_hit_rate_net_pct": 40.762608,
+          "trade_mean_gross_pct": -0.140257,
+          "trade_mean_net_pct": -0.787189,
+          "cost_per_trade_pct": 0.646931,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -43.82,
+              "benchmark": -14.642,
+              "excess_mean_ann": -43.577
+            },
+            "2019": {
+              "strategy": -27.107,
+              "benchmark": -0.921,
+              "excess_mean_ann": -31.596
+            },
+            "2020": {
+              "strategy": -37.99,
+              "benchmark": 37.489,
+              "excess_mean_ann": -79.242
+            },
+            "2021": {
+              "strategy": -30.06,
+              "benchmark": 15.86,
+              "excess_mean_ann": -50.288
+            },
+            "2022": {
+              "strategy": -32.936,
+              "benchmark": -30.841,
+              "excess_mean_ann": -3.798
+            },
+            "2023": {
+              "strategy": -2.661,
+              "benchmark": 1.27,
+              "excess_mean_ann": -200.176
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12195,
+            "blocked_entry": 125,
+            "delayed_exit": 38,
+            "delisted_exit": 0,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -17.014736,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -15.644406,
+          "excess_mean_ann_pct": -18.440527,
+          "excess_ci95_ann_pct": [
+            -33.33417,
+            -3.269099
+          ],
+          "excess_p_bootstrap": 0.9906,
+          "excess_t_newey_west": -2.270919,
+          "strategy_sharpe": -0.638095,
+          "strategy_mdd_pct": -67.363316,
+          "avg_invested_pct": 88.439059,
+          "trades": 12195,
+          "trade_hit_rate_net_pct": 42.870029,
+          "trade_mean_gross_pct": 0.030908,
+          "trade_mean_net_pct": -0.616811,
+          "cost_per_trade_pct": 0.647718,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -31.493,
+              "benchmark": -14.642,
+              "excess_mean_ann": -23.209
+            },
+            "2019": {
+              "strategy": -17.893,
+              "benchmark": -0.921,
+              "excess_mean_ann": -19.693
+            },
+            "2020": {
+              "strategy": -0.515,
+              "benchmark": 37.489,
+              "excess_mean_ann": -32.204
+            },
+            "2021": {
+              "strategy": -6.683,
+              "benchmark": 15.86,
+              "excess_mean_ann": -21.772
+            },
+            "2022": {
+              "strategy": -21.719,
+              "benchmark": -30.841,
+              "excess_mean_ann": 11.404
+            },
+            "2023": {
+              "strategy": -2.36,
+              "benchmark": 4.909,
+              "excess_mean_ann": -181.991
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12195,
+            "blocked_entry": 125,
+            "delayed_exit": 20,
+            "delisted_exit": 0,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -27.900676,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -31.961313,
+          "excess_mean_ann_pct": -34.042891,
+          "excess_ci95_ann_pct": [
+            -51.700018,
+            -15.55132
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.600456,
+          "strategy_sharpe": -2.653369,
+          "strategy_mdd_pct": -80.501906,
+          "avg_invested_pct": 79.740678,
+          "trades": 12317,
+          "trade_hit_rate_net_pct": 38.377852,
+          "trade_mean_gross_pct": 0.071827,
+          "trade_mean_net_pct": -0.630066,
+          "cost_per_trade_pct": 0.701893,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.953,
+              "benchmark": -14.642,
+              "excess_mean_ann": -21.255
+            },
+            "2019": {
+              "strategy": -33.316,
+              "benchmark": -0.921,
+              "excess_mean_ann": -41.86
+            },
+            "2020": {
+              "strategy": -25.396,
+              "benchmark": 37.489,
+              "excess_mean_ann": -67.073
+            },
+            "2021": {
+              "strategy": -22.354,
+              "benchmark": 15.86,
+              "excess_mean_ann": -41.99
+            },
+            "2022": {
+              "strategy": -25.354,
+              "benchmark": -30.841,
+              "excess_mean_ann": 5.011
+            },
+            "2023": {
+              "strategy": -1.885,
+              "benchmark": 1.27,
+              "excess_mean_ann": -159.854
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12317,
+            "blocked_entry": 3,
+            "delayed_exit": 5,
+            "delisted_exit": 4,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -12.878605,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -12.985415,
+          "excess_mean_ann_pct": -15.781537,
+          "excess_ci95_ann_pct": [
+            -33.396317,
+            2.196513
+          ],
+          "excess_p_bootstrap": 0.9624,
+          "excess_t_newey_west": -1.692641,
+          "strategy_sharpe": -1.03131,
+          "strategy_mdd_pct": -54.570654,
+          "avg_invested_pct": 89.299508,
+          "trades": 12317,
+          "trade_hit_rate_net_pct": 41.868962,
+          "trade_mean_gross_pct": 0.198991,
+          "trade_mean_net_pct": -0.503473,
+          "cost_per_trade_pct": 0.702464,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -18.084,
+              "benchmark": -14.642,
+              "excess_mean_ann": -6.489
+            },
+            "2019": {
+              "strategy": -18.306,
+              "benchmark": -0.921,
+              "excess_mean_ann": -21.027
+            },
+            "2020": {
+              "strategy": -10.27,
+              "benchmark": 37.489,
+              "excess_mean_ann": -48.143
+            },
+            "2021": {
+              "strategy": -5.9,
+              "benchmark": 15.86,
+              "excess_mean_ann": -22.435
+            },
+            "2022": {
+              "strategy": -10.515,
+              "benchmark": -30.841,
+              "excess_mean_ann": 23.601
+            },
+            "2023": {
+              "strategy": 0.3,
+              "benchmark": 4.909,
+              "excess_mean_ann": -113.828
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 12320,
+            "filled": 12317,
+            "blocked_entry": 3,
+            "delayed_exit": 4,
+            "delisted_exit": 9,
+            "forced_window_end_exit": 0
+          }
+        }
+      },
+      "validation": {
+        "REV5_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -36.468379,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -41.540915,
+          "excess_mean_ann_pct": -46.86128,
+          "excess_ci95_ann_pct": [
+            -75.329183,
+            -19.010587
+          ],
+          "excess_p_bootstrap": 0.9992,
+          "excess_t_newey_west": -3.179277,
+          "strategy_sharpe": -1.523177,
+          "strategy_mdd_pct": -75.531829,
+          "avg_invested_pct": 84.757228,
+          "trades": 7242,
+          "trade_hit_rate_net_pct": 40.113228,
+          "trade_mean_gross_pct": -0.313481,
+          "trade_mean_net_pct": -0.86339,
+          "cost_per_trade_pct": 0.549908,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -53.302,
+              "benchmark": 9.216,
+              "excess_mean_ann": -84.827
+            },
+            "2024": {
+              "strategy": -26.181,
+              "benchmark": -20.394,
+              "excess_mean_ann": -7.777
+            },
+            "2025": {
+              "strategy": -22.048,
+              "benchmark": 26.121,
+              "excess_mean_ann": -47.989
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 7260,
+            "filled": 7242,
+            "blocked_entry": 18,
+            "delayed_exit": 36,
+            "delisted_exit": 16,
+            "forced_window_end_exit": 0
+          }
+        },
+        "REV5_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -28.385825,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -30.234552,
+          "excess_mean_ann_pct": -35.554917,
+          "excess_ci95_ann_pct": [
+            -60.482541,
+            -10.416591
+          ],
+          "excess_p_bootstrap": 0.9976,
+          "excess_t_newey_west": -2.753957,
+          "strategy_sharpe": -1.210462,
+          "strategy_mdd_pct": -65.302647,
+          "avg_invested_pct": 90.77671,
+          "trades": 7192,
+          "trade_hit_rate_net_pct": 38.890434,
+          "trade_mean_gross_pct": -0.766924,
+          "trade_mean_net_pct": -1.314072,
+          "cost_per_trade_pct": 0.547147,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -40.561,
+              "benchmark": 9.216,
+              "excess_mean_ann": -60.798
+            },
+            "2024": {
+              "strategy": -20.856,
+              "benchmark": -20.394,
+              "excess_mean_ann": -0.124
+            },
+            "2025": {
+              "strategy": -19.19,
+              "benchmark": 26.121,
+              "excess_mean_ann": -45.827
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 7210,
+            "filled": 7192,
+            "blocked_entry": 18,
+            "delayed_exit": 51,
+            "delisted_exit": 34,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -27.877979,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -30.380995,
+          "excess_mean_ann_pct": -35.70136,
+          "excess_ci95_ann_pct": [
+            -54.962343,
+            -16.369547
+          ],
+          "excess_p_bootstrap": 0.9994,
+          "excess_t_newey_west": -3.381589,
+          "strategy_sharpe": -1.425397,
+          "strategy_mdd_pct": -68.262816,
+          "avg_invested_pct": 78.599118,
+          "trades": 7186,
+          "trade_hit_rate_net_pct": 40.759811,
+          "trade_mean_gross_pct": -0.04253,
+          "trade_mean_net_pct": -0.618238,
+          "cost_per_trade_pct": 0.575708,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -26.967,
+              "benchmark": 9.216,
+              "excess_mean_ann": -40.944
+            },
+            "2024": {
+              "strategy": -41.57,
+              "benchmark": -20.394,
+              "excess_mean_ann": -32.284
+            },
+            "2025": {
+              "strategy": -9.074,
+              "benchmark": 26.121,
+              "excess_mean_ann": -33.861
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 7260,
+            "filled": 7186,
+            "blocked_entry": 74,
+            "delayed_exit": 26,
+            "delisted_exit": 7,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -8.196303,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -6.534064,
+          "excess_mean_ann_pct": -11.854429,
+          "excess_ci95_ann_pct": [
+            -30.43772,
+            7.201283
+          ],
+          "excess_p_bootstrap": 0.8984,
+          "excess_t_newey_west": -1.202269,
+          "strategy_sharpe": -0.325723,
+          "strategy_mdd_pct": -53.490032,
+          "avg_invested_pct": 87.738164,
+          "trades": 7138,
+          "trade_hit_rate_net_pct": 42.224713,
+          "trade_mean_gross_pct": 0.304026,
+          "trade_mean_net_pct": -0.272989,
+          "cost_per_trade_pct": 0.577015,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -2.638,
+              "benchmark": 9.216,
+              "excess_mean_ann": -11.627
+            },
+            "2024": {
+              "strategy": -29.972,
+              "benchmark": -20.394,
+              "excess_mean_ann": -13.671
+            },
+            "2025": {
+              "strategy": 14.486,
+              "benchmark": 26.121,
+              "excess_mean_ann": -10.251
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 7210,
+            "filled": 7138,
+            "blocked_entry": 72,
+            "delayed_exit": 39,
+            "delisted_exit": 12,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -19.404303,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -20.776359,
+          "excess_mean_ann_pct": -26.096724,
+          "excess_ci95_ann_pct": [
+            -46.944139,
+            -6.007339
+          ],
+          "excess_p_bootstrap": 0.9932,
+          "excess_t_newey_west": -2.518303,
+          "strategy_sharpe": -1.66205,
+          "strategy_mdd_pct": -47.822607,
+          "avg_invested_pct": 79.555308,
+          "trades": 7257,
+          "trade_hit_rate_net_pct": 39.299986,
+          "trade_mean_gross_pct": 0.244078,
+          "trade_mean_net_pct": -0.406976,
+          "cost_per_trade_pct": 0.651054,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -27.234,
+              "benchmark": 9.216,
+              "excess_mean_ann": -42.772
+            },
+            "2024": {
+              "strategy": -11.44,
+              "benchmark": -20.394,
+              "excess_mean_ann": 9.116
+            },
+            "2025": {
+              "strategy": -16.932,
+              "benchmark": 26.121,
+              "excess_mean_ann": -44.787
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 7260,
+            "filled": 7257,
+            "blocked_entry": 3,
+            "delayed_exit": 8,
+            "delisted_exit": 12,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -4.649242,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -3.926852,
+          "excess_mean_ann_pct": -9.247217,
+          "excess_ci95_ann_pct": [
+            -29.724443,
+            10.421289
+          ],
+          "excess_p_bootstrap": 0.8086,
+          "excess_t_newey_west": -0.893646,
+          "strategy_sharpe": -0.305091,
+          "strategy_mdd_pct": -24.788358,
+          "avg_invested_pct": 88.728449,
+          "trades": 7207,
+          "trade_hit_rate_net_pct": 44.498404,
+          "trade_mean_gross_pct": 0.509416,
+          "trade_mean_net_pct": -0.143051,
+          "cost_per_trade_pct": 0.652468,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -15.745,
+              "benchmark": 9.216,
+              "excess_mean_ann": -27.607
+            },
+            "2024": {
+              "strategy": 2.395,
+              "benchmark": -20.394,
+              "excess_mean_ann": 24.179
+            },
+            "2025": {
+              "strategy": 0.979,
+              "benchmark": 26.121,
+              "excess_mean_ann": -24.438
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 7210,
+            "filled": 7207,
+            "blocked_entry": 3,
+            "delayed_exit": 8,
+            "delisted_exit": 27,
+            "forced_window_end_exit": 0
+          }
+        }
+      }
+    },
+    "N50": {
+      "universe_median_names": 986.0,
+      "dev": {
+        "REV5_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -28.976491,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -30.60092,
+          "excess_mean_ann_pct": -32.682499,
+          "excess_ci95_ann_pct": [
+            -43.419496,
+            -21.261525
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.853804,
+          "strategy_sharpe": -1.146921,
+          "strategy_mdd_pct": -84.279412,
+          "avg_invested_pct": 82.605457,
+          "trades": 61520,
+          "trade_hit_rate_net_pct": 41.38329,
+          "trade_mean_gross_pct": -0.039389,
+          "trade_mean_net_pct": -0.686335,
+          "cost_per_trade_pct": 0.646946,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.1,
+              "benchmark": -14.642,
+              "excess_mean_ann": -15.63
+            },
+            "2019": {
+              "strategy": -32.98,
+              "benchmark": -0.921,
+              "excess_mean_ann": -39.476
+            },
+            "2020": {
+              "strategy": 1.77,
+              "benchmark": 37.489,
+              "excess_mean_ann": -31.277
+            },
+            "2021": {
+              "strategy": -30.256,
+              "benchmark": 15.86,
+              "excess_mean_ann": -51.178
+            },
+            "2022": {
+              "strategy": -45.704,
+              "benchmark": -30.841,
+              "excess_mean_ann": -25.397
+            },
+            "2023": {
+              "strategy": 0.541,
+              "benchmark": 1.27,
+              "excess_mean_ann": -37.955
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61520,
+            "blocked_entry": 80,
+            "delayed_exit": 162,
+            "delisted_exit": 7,
+            "forced_window_end_exit": 42
+          }
+        },
+        "REV5_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -22.362583,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -21.71583,
+          "excess_mean_ann_pct": -24.511952,
+          "excess_ci95_ann_pct": [
+            -33.87757,
+            -14.26815
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.09617,
+          "strategy_sharpe": -0.814676,
+          "strategy_mdd_pct": -77.113067,
+          "avg_invested_pct": 90.278876,
+          "trades": 61520,
+          "trade_hit_rate_net_pct": 40.13329,
+          "trade_mean_gross_pct": -0.303719,
+          "trade_mean_net_pct": -0.949275,
+          "cost_per_trade_pct": 0.645556,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -24.868,
+              "benchmark": -14.642,
+              "excess_mean_ann": -11.522
+            },
+            "2019": {
+              "strategy": -22.083,
+              "benchmark": -0.921,
+              "excess_mean_ann": -23.983
+            },
+            "2020": {
+              "strategy": 8.791,
+              "benchmark": 37.489,
+              "excess_mean_ann": -24.449
+            },
+            "2021": {
+              "strategy": -26.996,
+              "benchmark": 15.86,
+              "excess_mean_ann": -46.525
+            },
+            "2022": {
+              "strategy": -39.044,
+              "benchmark": -30.841,
+              "excess_mean_ann": -13.243
+            },
+            "2023": {
+              "strategy": 1.444,
+              "benchmark": 4.909,
+              "excess_mean_ann": -86.028
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61520,
+            "blocked_entry": 80,
+            "delayed_exit": 255,
+            "delisted_exit": 19,
+            "forced_window_end_exit": 72
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -29.341607,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -32.52198,
+          "excess_mean_ann_pct": -34.603558,
+          "excess_ci95_ann_pct": [
+            -48.221584,
+            -20.939285
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.961893,
+          "strategy_sharpe": -1.559563,
+          "strategy_mdd_pct": -82.208656,
+          "avg_invested_pct": 79.510988,
+          "trades": 61429,
+          "trade_hit_rate_net_pct": 40.627391,
+          "trade_mean_gross_pct": 0.003391,
+          "trade_mean_net_pct": -0.642291,
+          "cost_per_trade_pct": 0.645682,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -43.25,
+              "benchmark": -14.642,
+              "excess_mean_ann": -43.342
+            },
+            "2019": {
+              "strategy": -25.196,
+              "benchmark": -0.921,
+              "excess_mean_ann": -29.483
+            },
+            "2020": {
+              "strategy": -14.831,
+              "benchmark": 37.489,
+              "excess_mean_ann": -50.377
+            },
+            "2021": {
+              "strategy": -11.921,
+              "benchmark": 15.86,
+              "excess_mean_ann": -28.149
+            },
+            "2022": {
+              "strategy": -41.095,
+              "benchmark": -30.841,
+              "excess_mean_ann": -18.029
+            },
+            "2023": {
+              "strategy": -2.952,
+              "benchmark": 1.27,
+              "excess_mean_ann": -215.142
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61429,
+            "blocked_entry": 171,
+            "delayed_exit": 97,
+            "delisted_exit": 7,
+            "forced_window_end_exit": 4
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -14.140638,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -12.935412,
+          "excess_mean_ann_pct": -15.731534,
+          "excess_ci95_ann_pct": [
+            -27.885083,
+            -3.415989
+          ],
+          "excess_p_bootstrap": 0.9934,
+          "excess_t_newey_west": -2.501903,
+          "strategy_sharpe": -0.603855,
+          "strategy_mdd_pct": -64.114709,
+          "avg_invested_pct": 89.038748,
+          "trades": 61429,
+          "trade_hit_rate_net_pct": 42.351332,
+          "trade_mean_gross_pct": 0.141357,
+          "trade_mean_net_pct": -0.50474,
+          "cost_per_trade_pct": 0.646098,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -30.21,
+              "benchmark": -14.642,
+              "excess_mean_ann": -21.76
+            },
+            "2019": {
+              "strategy": -14.093,
+              "benchmark": -0.921,
+              "excess_mean_ann": -15.285
+            },
+            "2020": {
+              "strategy": 7.79,
+              "benchmark": 37.489,
+              "excess_mean_ann": -26.057
+            },
+            "2021": {
+              "strategy": 7.451,
+              "benchmark": 15.86,
+              "excess_mean_ann": -7.98
+            },
+            "2022": {
+              "strategy": -30.558,
+              "benchmark": -30.841,
+              "excess_mean_ann": -1.125
+            },
+            "2023": {
+              "strategy": -2.12,
+              "benchmark": 4.909,
+              "excess_mean_ann": -175.737
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61429,
+            "blocked_entry": 171,
+            "delayed_exit": 100,
+            "delisted_exit": 16,
+            "forced_window_end_exit": 9
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -30.720114,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -35.611849,
+          "excess_mean_ann_pct": -37.693427,
+          "excess_ci95_ann_pct": [
+            -51.348772,
+            -24.183514
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.156034,
+          "strategy_sharpe": -2.451806,
+          "strategy_mdd_pct": -84.225524,
+          "avg_invested_pct": 79.746814,
+          "trades": 61589,
+          "trade_hit_rate_net_pct": 38.855965,
+          "trade_mean_gross_pct": 0.009086,
+          "trade_mean_net_pct": -0.702,
+          "cost_per_trade_pct": 0.711086,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -34.877,
+              "benchmark": -14.642,
+              "excess_mean_ann": -30.204
+            },
+            "2019": {
+              "strategy": -31.643,
+              "benchmark": -0.921,
+              "excess_mean_ann": -39.196
+            },
+            "2020": {
+              "strategy": -26.852,
+              "benchmark": 37.489,
+              "excess_mean_ann": -68.088
+            },
+            "2021": {
+              "strategy": -20.867,
+              "benchmark": 15.86,
+              "excess_mean_ann": -39.759
+            },
+            "2022": {
+              "strategy": -34.684,
+              "benchmark": -30.841,
+              "excess_mean_ann": -8.467
+            },
+            "2023": {
+              "strategy": -1.799,
+              "benchmark": 1.27,
+              "excess_mean_ann": -155.679
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61589,
+            "blocked_entry": 11,
+            "delayed_exit": 23,
+            "delisted_exit": 13,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -17.14487,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -17.653145,
+          "excess_mean_ann_pct": -20.449266,
+          "excess_ci95_ann_pct": [
+            -33.60464,
+            -7.028069
+          ],
+          "excess_p_bootstrap": 0.9992,
+          "excess_t_newey_west": -2.892602,
+          "strategy_sharpe": -1.169359,
+          "strategy_mdd_pct": -63.245052,
+          "avg_invested_pct": 89.31621,
+          "trades": 61589,
+          "trade_hit_rate_net_pct": 41.473315,
+          "trade_mean_gross_pct": 0.021745,
+          "trade_mean_net_pct": -0.689118,
+          "cost_per_trade_pct": 0.710863,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -22.864,
+              "benchmark": -14.642,
+              "excess_mean_ann": -12.638
+            },
+            "2019": {
+              "strategy": -18.909,
+              "benchmark": -0.921,
+              "excess_mean_ann": -21.696
+            },
+            "2020": {
+              "strategy": -13.28,
+              "benchmark": 37.489,
+              "excess_mean_ann": -50.535
+            },
+            "2021": {
+              "strategy": -4.313,
+              "benchmark": 15.86,
+              "excess_mean_ann": -20.437
+            },
+            "2022": {
+              "strategy": -23.415,
+              "benchmark": -30.841,
+              "excess_mean_ann": 7.892
+            },
+            "2023": {
+              "strategy": -0.367,
+              "benchmark": 4.909,
+              "excess_mean_ann": -130.973
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 61600,
+            "filled": 61589,
+            "blocked_entry": 11,
+            "delayed_exit": 24,
+            "delisted_exit": 33,
+            "forced_window_end_exit": 0
+          }
+        }
+      },
+      "validation": {
+        "REV5_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -29.161516,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -31.75257,
+          "excess_mean_ann_pct": -37.072935,
+          "excess_ci95_ann_pct": [
+            -51.202558,
+            -22.95982
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.317075,
+          "strategy_sharpe": -1.36884,
+          "strategy_mdd_pct": -67.85484,
+          "avg_invested_pct": 81.737586,
+          "trades": 36268,
+          "trade_hit_rate_net_pct": 40.355134,
+          "trade_mean_gross_pct": -0.122632,
+          "trade_mean_net_pct": -0.683326,
+          "cost_per_trade_pct": 0.560694,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -31.887,
+              "benchmark": 9.216,
+              "excess_mean_ann": -47.698
+            },
+            "2024": {
+              "strategy": -31.276,
+              "benchmark": -20.394,
+              "excess_mean_ann": -14.813
+            },
+            "2025": {
+              "strategy": -21.31,
+              "benchmark": 26.121,
+              "excess_mean_ann": -48.804
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 36300,
+            "filled": 36268,
+            "blocked_entry": 32,
+            "delayed_exit": 83,
+            "delisted_exit": 36,
+            "forced_window_end_exit": 0
+          }
+        },
+        "REV5_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -22.029008,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -22.244779,
+          "excess_mean_ann_pct": -27.565144,
+          "excess_ci95_ann_pct": [
+            -39.010568,
+            -15.867993
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.723852,
+          "strategy_sharpe": -0.972635,
+          "strategy_mdd_pct": -57.916471,
+          "avg_invested_pct": 89.747333,
+          "trades": 36018,
+          "trade_hit_rate_net_pct": 38.994392,
+          "trade_mean_gross_pct": -0.389266,
+          "trade_mean_net_pct": -0.948375,
+          "cost_per_trade_pct": 0.559109,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -24.067,
+              "benchmark": 9.216,
+              "excess_mean_ann": -36.567
+            },
+            "2024": {
+              "strategy": -30.301,
+              "benchmark": -20.394,
+              "excess_mean_ann": -13.36
+            },
+            "2025": {
+              "strategy": -8.106,
+              "benchmark": 26.121,
+              "excess_mean_ann": -32.811
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 36050,
+            "filled": 36018,
+            "blocked_entry": 32,
+            "delayed_exit": 118,
+            "delisted_exit": 68,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -18.207786,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -18.529643,
+          "excess_mean_ann_pct": -23.850008,
+          "excess_ci95_ann_pct": [
+            -38.092285,
+            -9.291617
+          ],
+          "excess_p_bootstrap": 0.9992,
+          "excess_t_newey_west": -3.158987,
+          "strategy_sharpe": -1.050865,
+          "strategy_mdd_pct": -56.695545,
+          "avg_invested_pct": 79.283662,
+          "trades": 36197,
+          "trade_hit_rate_net_pct": 42.663757,
+          "trade_mean_gross_pct": 0.189716,
+          "trade_mean_net_pct": -0.381544,
+          "cost_per_trade_pct": 0.57126,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -19.46,
+              "benchmark": 9.216,
+              "excess_mean_ann": -31.847
+            },
+            "2024": {
+              "strategy": -33.047,
+              "benchmark": -20.394,
+              "excess_mean_ann": -18.949
+            },
+            "2025": {
+              "strategy": 3.6,
+              "benchmark": 26.121,
+              "excess_mean_ann": -20.728
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 36300,
+            "filled": 36197,
+            "blocked_entry": 103,
+            "delayed_exit": 63,
+            "delisted_exit": 17,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -1.6058,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": 0.009849,
+          "excess_mean_ann_pct": -5.310516,
+          "excess_ci95_ann_pct": [
+            -19.191604,
+            8.712455
+          ],
+          "excess_p_bootstrap": 0.7878,
+          "excess_t_newey_west": -0.719288,
+          "strategy_sharpe": 0.000547,
+          "strategy_mdd_pct": -41.747364,
+          "avg_invested_pct": 88.452199,
+          "trades": 35949,
+          "trade_hit_rate_net_pct": 44.268269,
+          "trade_mean_gross_pct": 0.55694,
+          "trade_mean_net_pct": -0.015697,
+          "cost_per_trade_pct": 0.572637,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -2.412,
+              "benchmark": 9.216,
+              "excess_mean_ann": -12.054
+            },
+            "2024": {
+              "strategy": -22.047,
+              "benchmark": -20.394,
+              "excess_mean_ann": -3.059
+            },
+            "2025": {
+              "strategy": 25.43,
+              "benchmark": 26.121,
+              "excess_mean_ann": -0.782
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 36050,
+            "filled": 35949,
+            "blocked_entry": 101,
+            "delayed_exit": 108,
+            "delisted_exit": 37,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -18.228263,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -19.306775,
+          "excess_mean_ann_pct": -24.62714,
+          "excess_ci95_ann_pct": [
+            -40.548846,
+            -8.624906
+          ],
+          "excess_p_bootstrap": 0.9996,
+          "excess_t_newey_west": -2.976251,
+          "strategy_sharpe": -1.522526,
+          "strategy_mdd_pct": -48.648961,
+          "avg_invested_pct": 79.5716,
+          "trades": 36296,
+          "trade_hit_rate_net_pct": 41.087172,
+          "trade_mean_gross_pct": 0.280123,
+          "trade_mean_net_pct": -0.382948,
+          "cost_per_trade_pct": 0.663071,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -20.055,
+              "benchmark": 9.216,
+              "excess_mean_ann": -33.334
+            },
+            "2024": {
+              "strategy": -25.762,
+              "benchmark": -20.394,
+              "excess_mean_ann": -8.865
+            },
+            "2025": {
+              "strategy": -5.94,
+              "benchmark": 26.121,
+              "excess_mean_ann": -31.741
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 36300,
+            "filled": 36296,
+            "blocked_entry": 4,
+            "delayed_exit": 20,
+            "delisted_exit": 12,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -3.654383,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -2.873268,
+          "excess_mean_ann_pct": -8.193633,
+          "excess_ci95_ann_pct": [
+            -23.963346,
+            7.811787
+          ],
+          "excess_p_bootstrap": 0.835,
+          "excess_t_newey_west": -0.992372,
+          "strategy_sharpe": -0.221137,
+          "strategy_mdd_pct": -27.58343,
+          "avg_invested_pct": 88.860172,
+          "trades": 36046,
+          "trade_hit_rate_net_pct": 44.470954,
+          "trade_mean_gross_pct": 0.552227,
+          "trade_mean_net_pct": -0.112321,
+          "cost_per_trade_pct": 0.664548,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -7.896,
+              "benchmark": 9.216,
+              "excess_mean_ann": -18.708
+            },
+            "2024": {
+              "strategy": -12.06,
+              "benchmark": -20.394,
+              "excess_mean_ann": 8.67
+            },
+            "2025": {
+              "strategy": 10.841,
+              "benchmark": 26.121,
+              "excess_mean_ann": -14.595
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 36050,
+            "filled": 36046,
+            "blocked_entry": 4,
+            "delayed_exit": 27,
+            "delisted_exit": 27,
+            "forced_window_end_exit": 0
+          }
+        }
+      }
+    },
+    "turnover_5e8": {
+      "universe_median_names": 1254.0,
+      "dev": {
+        "REV5_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -27.415968,
+          "benchmark_cagr_pct": 2.146623,
+          "strategy_mean_ann_pct": -29.146114,
+          "excess_mean_ann_pct": -34.481404,
+          "excess_ci95_ann_pct": [
+            -49.773326,
+            -17.583117
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.309972,
+          "strategy_sharpe": -1.219027,
+          "strategy_mdd_pct": -83.445847,
+          "avg_invested_pct": 85.227921,
+          "trades": 24582,
+          "trade_hit_rate_net_pct": 40.802213,
+          "trade_mean_gross_pct": -0.126601,
+          "trade_mean_net_pct": -0.766264,
+          "cost_per_trade_pct": 0.639663,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.548,
+              "benchmark": -11.876,
+              "excess_mean_ann": -19.529
+            },
+            "2019": {
+              "strategy": -35.135,
+              "benchmark": 3.108,
+              "excess_mean_ann": -47.275
+            },
+            "2020": {
+              "strategy": 5.716,
+              "benchmark": 40.446,
+              "excess_mean_ann": -31.416
+            },
+            "2021": {
+              "strategy": -32.143,
+              "benchmark": 19.045,
+              "excess_mean_ann": -56.959
+            },
+            "2022": {
+              "strategy": -37.575,
+              "benchmark": -27.931,
+              "excess_mean_ann": -16.25
+            },
+            "2023": {
+              "strategy": 0.08,
+              "benchmark": 1.364,
+              "excess_mean_ann": -65.931
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24582,
+            "blocked_entry": 58,
+            "delayed_exit": 114,
+            "delisted_exit": 4,
+            "forced_window_end_exit": 37
+          }
+        },
+        "REV5_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -22.243229,
+          "benchmark_cagr_pct": 2.932469,
+          "strategy_mean_ann_pct": -22.048966,
+          "excess_mean_ann_pct": -28.143797,
+          "excess_ci95_ann_pct": [
+            -41.12438,
+            -14.039894
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.198744,
+          "strategy_sharpe": -0.888699,
+          "strategy_mdd_pct": -78.278331,
+          "avg_invested_pct": 91.093848,
+          "trades": 24582,
+          "trade_hit_rate_net_pct": 39.744529,
+          "trade_mean_gross_pct": -0.442688,
+          "trade_mean_net_pct": -1.081007,
+          "cost_per_trade_pct": 0.638318,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -22.319,
+              "benchmark": -11.876,
+              "excess_mean_ann": -11.394
+            },
+            "2019": {
+              "strategy": -22.716,
+              "benchmark": 3.108,
+              "excess_mean_ann": -29.174
+            },
+            "2020": {
+              "strategy": 12.144,
+              "benchmark": 40.446,
+              "excess_mean_ann": -24.743
+            },
+            "2021": {
+              "strategy": -34.032,
+              "benchmark": 19.045,
+              "excess_mean_ann": -59.733
+            },
+            "2022": {
+              "strategy": -34.964,
+              "benchmark": -27.931,
+              "excess_mean_ann": -11.327
+            },
+            "2023": {
+              "strategy": 0.29,
+              "benchmark": 5.307,
+              "excess_mean_ann": -124.437
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24582,
+            "blocked_entry": 58,
+            "delayed_exit": 178,
+            "delisted_exit": 9,
+            "forced_window_end_exit": 53
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -32.752894,
+          "benchmark_cagr_pct": 2.146623,
+          "strategy_mean_ann_pct": -37.128018,
+          "excess_mean_ann_pct": -42.463308,
+          "excess_ci95_ann_pct": [
+            -58.125075,
+            -27.155342
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.223055,
+          "strategy_sharpe": -1.654519,
+          "strategy_mdd_pct": -86.802325,
+          "avg_invested_pct": 79.164096,
+          "trades": 24494,
+          "trade_hit_rate_net_pct": 40.418062,
+          "trade_mean_gross_pct": -0.065116,
+          "trade_mean_net_pct": -0.727579,
+          "cost_per_trade_pct": 0.662463,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -43.88,
+              "benchmark": -11.876,
+              "excess_mean_ann": -47.354
+            },
+            "2019": {
+              "strategy": -25.051,
+              "benchmark": 3.108,
+              "excess_mean_ann": -33.171
+            },
+            "2020": {
+              "strategy": -25.836,
+              "benchmark": 40.446,
+              "excess_mean_ann": -65.817
+            },
+            "2021": {
+              "strategy": -20.852,
+              "benchmark": 19.045,
+              "excess_mean_ann": -41.422
+            },
+            "2022": {
+              "strategy": -40.307,
+              "benchmark": -27.931,
+              "excess_mean_ann": -20.666
+            },
+            "2023": {
+              "strategy": -3.096,
+              "benchmark": 1.364,
+              "excess_mean_ann": -227.684
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24494,
+            "blocked_entry": 146,
+            "delayed_exit": 52,
+            "delisted_exit": 6,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -14.978513,
+          "benchmark_cagr_pct": 2.932469,
+          "strategy_mean_ann_pct": -13.821295,
+          "excess_mean_ann_pct": -19.916126,
+          "excess_ci95_ann_pct": [
+            -33.034938,
+            -6.709133
+          ],
+          "excess_p_bootstrap": 0.9982,
+          "excess_t_newey_west": -2.813193,
+          "strategy_sharpe": -0.631499,
+          "strategy_mdd_pct": -64.749441,
+          "avg_invested_pct": 88.73331,
+          "trades": 24494,
+          "trade_hit_rate_net_pct": 42.626766,
+          "trade_mean_gross_pct": 0.115747,
+          "trade_mean_net_pct": -0.547654,
+          "cost_per_trade_pct": 0.663401,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -32.632,
+              "benchmark": -11.876,
+              "excess_mean_ann": -28.447
+            },
+            "2019": {
+              "strategy": -13.051,
+              "benchmark": 3.108,
+              "excess_mean_ann": -18.108
+            },
+            "2020": {
+              "strategy": 4.441,
+              "benchmark": 40.446,
+              "excess_mean_ann": -31.024
+            },
+            "2021": {
+              "strategy": 2.392,
+              "benchmark": 19.045,
+              "excess_mean_ann": -15.555
+            },
+            "2022": {
+              "strategy": -26.481,
+              "benchmark": -27.931,
+              "excess_mean_ann": 0.469
+            },
+            "2023": {
+              "strategy": -2.344,
+              "benchmark": 5.307,
+              "excess_mean_ann": -191.269
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24494,
+            "blocked_entry": 146,
+            "delayed_exit": 43,
+            "delisted_exit": 10,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -29.859246,
+          "benchmark_cagr_pct": 2.146623,
+          "strategy_mean_ann_pct": -34.664869,
+          "excess_mean_ann_pct": -40.000159,
+          "excess_ci95_ann_pct": [
+            -56.131516,
+            -23.874296
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.743056,
+          "strategy_sharpe": -2.794317,
+          "strategy_mdd_pct": -83.243711,
+          "avg_invested_pct": 79.743753,
+          "trades": 24634,
+          "trade_hit_rate_net_pct": 37.708046,
+          "trade_mean_gross_pct": 0.08285,
+          "trade_mean_net_pct": -0.680632,
+          "cost_per_trade_pct": 0.763482,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -31.544,
+              "benchmark": -11.876,
+              "excess_mean_ann": -28.267
+            },
+            "2019": {
+              "strategy": -30.631,
+              "benchmark": 3.108,
+              "excess_mean_ann": -41.858
+            },
+            "2020": {
+              "strategy": -27.012,
+              "benchmark": 40.446,
+              "excess_mean_ann": -71.199
+            },
+            "2021": {
+              "strategy": -24.708,
+              "benchmark": 19.045,
+              "excess_mean_ann": -47.798
+            },
+            "2022": {
+              "strategy": -31.275,
+              "benchmark": -27.931,
+              "excess_mean_ann": -7.663
+            },
+            "2023": {
+              "strategy": -2.091,
+              "benchmark": 1.364,
+              "excess_mean_ann": -175.523
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24634,
+            "blocked_entry": 6,
+            "delayed_exit": 6,
+            "delisted_exit": 10,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -15.176357,
+          "benchmark_cagr_pct": 2.932469,
+          "strategy_mean_ann_pct": -15.611981,
+          "excess_mean_ann_pct": -21.706813,
+          "excess_ci95_ann_pct": [
+            -36.931084,
+            -5.904449
+          ],
+          "excess_p_bootstrap": 0.9976,
+          "excess_t_newey_west": -2.644637,
+          "strategy_sharpe": -1.208504,
+          "strategy_mdd_pct": -58.77829,
+          "avg_invested_pct": 89.300319,
+          "trades": 24634,
+          "trade_hit_rate_net_pct": 41.0246,
+          "trade_mean_gross_pct": 0.163255,
+          "trade_mean_net_pct": -0.600431,
+          "cost_per_trade_pct": 0.763686,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -19.785,
+              "benchmark": -11.876,
+              "excess_mean_ann": -11.832
+            },
+            "2019": {
+              "strategy": -17.103,
+              "benchmark": 3.108,
+              "excess_mean_ann": -23.572
+            },
+            "2020": {
+              "strategy": -11.3,
+              "benchmark": 40.446,
+              "excess_mean_ann": -51.218
+            },
+            "2021": {
+              "strategy": -7.92,
+              "benchmark": 19.045,
+              "excess_mean_ann": -27.323
+            },
+            "2022": {
+              "strategy": -17.837,
+              "benchmark": -27.931,
+              "excess_mean_ann": 10.648
+            },
+            "2023": {
+              "strategy": -0.363,
+              "benchmark": 5.307,
+              "excess_mean_ann": -140.576
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24634,
+            "blocked_entry": 6,
+            "delayed_exit": 9,
+            "delisted_exit": 15,
+            "forced_window_end_exit": 0
+          }
+        }
+      },
+      "validation": {
+        "REV5_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -32.316311,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -36.510094,
+          "excess_mean_ann_pct": -44.574239,
+          "excess_ci95_ann_pct": [
+            -64.869996,
+            -24.547445
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.318648,
+          "strategy_sharpe": -1.638937,
+          "strategy_mdd_pct": -71.015108,
+          "avg_invested_pct": 84.658616,
+          "trades": 14492,
+          "trade_hit_rate_net_pct": 40.00138,
+          "trade_mean_gross_pct": -0.293273,
+          "trade_mean_net_pct": -0.860678,
+          "cost_per_trade_pct": 0.567404,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -40.666,
+              "benchmark": 13.673,
+              "excess_mean_ann": -65.562
+            },
+            "2024": {
+              "strategy": -31.203,
+              "benchmark": -16.942,
+              "excess_mean_ann": -19.83
+            },
+            "2025": {
+              "strategy": -20.92,
+              "benchmark": 26.146,
+              "excess_mean_ann": -48.361
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14492,
+            "blocked_entry": 28,
+            "delayed_exit": 61,
+            "delisted_exit": 32,
+            "forced_window_end_exit": 0
+          }
+        },
+        "REV5_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -24.619524,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -25.917211,
+          "excess_mean_ann_pct": -33.981356,
+          "excess_ci95_ann_pct": [
+            -50.927303,
+            -16.507188
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.81879,
+          "strategy_sharpe": -1.201831,
+          "strategy_mdd_pct": -60.601712,
+          "avg_invested_pct": 90.818922,
+          "trades": 14392,
+          "trade_hit_rate_net_pct": 38.896609,
+          "trade_mean_gross_pct": -0.583735,
+          "trade_mean_net_pct": -1.14933,
+          "cost_per_trade_pct": 0.565594,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -32.865,
+              "benchmark": 13.673,
+              "excess_mean_ann": -53.183
+            },
+            "2024": {
+              "strategy": -25.507,
+              "benchmark": -16.942,
+              "excess_mean_ann": -11.475
+            },
+            "2025": {
+              "strategy": -11.819,
+              "benchmark": 26.146,
+              "excess_mean_ann": -37.313
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14392,
+            "blocked_entry": 28,
+            "delayed_exit": 75,
+            "delisted_exit": 61,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -22.762447,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -24.131531,
+          "excess_mean_ann_pct": -32.195675,
+          "excess_ci95_ann_pct": [
+            -48.526432,
+            -15.350385
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.558353,
+          "strategy_sharpe": -1.317148,
+          "strategy_mdd_pct": -61.97764,
+          "avg_invested_pct": 78.999123,
+          "trades": 14423,
+          "trade_hit_rate_net_pct": 41.364487,
+          "trade_mean_gross_pct": 0.113638,
+          "trade_mean_net_pct": -0.489769,
+          "cost_per_trade_pct": 0.603407,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -21.646,
+              "benchmark": 13.673,
+              "excess_mean_ann": -38.477
+            },
+            "2024": {
+              "strategy": -38.256,
+              "benchmark": -16.942,
+              "excess_mean_ann": -31.341
+            },
+            "2025": {
+              "strategy": -2.185,
+              "benchmark": 26.146,
+              "excess_mean_ann": -26.724
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14423,
+            "blocked_entry": 97,
+            "delayed_exit": 39,
+            "delisted_exit": 11,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -3.460987,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -1.898327,
+          "excess_mean_ann_pct": -9.962472,
+          "excess_ci95_ann_pct": [
+            -27.003666,
+            7.463674
+          ],
+          "excess_p_bootstrap": 0.8812,
+          "excess_t_newey_west": -1.10971,
+          "strategy_sharpe": -0.105501,
+          "strategy_mdd_pct": -44.697832,
+          "avg_invested_pct": 88.084463,
+          "trades": 14325,
+          "trade_hit_rate_net_pct": 43.169284,
+          "trade_mean_gross_pct": 0.515489,
+          "trade_mean_net_pct": -0.089353,
+          "cost_per_trade_pct": 0.604842,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -2.153,
+              "benchmark": 13.673,
+              "excess_mean_ann": -15.757
+            },
+            "2024": {
+              "strategy": -24.705,
+              "benchmark": -16.942,
+              "excess_mean_ann": -10.841
+            },
+            "2025": {
+              "strategy": 22.568,
+              "benchmark": 26.146,
+              "excess_mean_ann": -3.235
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14325,
+            "blocked_entry": 95,
+            "delayed_exit": 64,
+            "delisted_exit": 21,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -23.581693,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -26.186993,
+          "excess_mean_ann_pct": -34.251138,
+          "excess_ci95_ann_pct": [
+            -52.509818,
+            -16.507175
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.710728,
+          "strategy_sharpe": -2.230857,
+          "strategy_mdd_pct": -55.428527,
+          "avg_invested_pct": 79.59589,
+          "trades": 14514,
+          "trade_hit_rate_net_pct": 37.66708,
+          "trade_mean_gross_pct": 0.198874,
+          "trade_mean_net_pct": -0.521029,
+          "cost_per_trade_pct": 0.719903,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -31.09,
+              "benchmark": 13.673,
+              "excess_mean_ann": -52.646
+            },
+            "2024": {
+              "strategy": -20.183,
+              "benchmark": -16.942,
+              "excess_mean_ann": -5.914
+            },
+            "2025": {
+              "strategy": -16.581,
+              "benchmark": 26.146,
+              "excess_mean_ann": -44.275
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14514,
+            "blocked_entry": 6,
+            "delayed_exit": 28,
+            "delisted_exit": 14,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -8.932217,
+          "benchmark_cagr_pct": 6.219978,
+          "strategy_mean_ann_pct": -8.627382,
+          "excess_mean_ann_pct": -16.691526,
+          "excess_ci95_ann_pct": [
+            -35.049932,
+            0.620494
+          ],
+          "excess_p_bootstrap": 0.965,
+          "excess_t_newey_west": -1.858595,
+          "strategy_sharpe": -0.71746,
+          "strategy_mdd_pct": -32.182216,
+          "avg_invested_pct": 88.748376,
+          "trades": 14414,
+          "trade_hit_rate_net_pct": 41.924518,
+          "trade_mean_gross_pct": 0.380333,
+          "trade_mean_net_pct": -0.340629,
+          "cost_per_trade_pct": 0.720961,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -18.384,
+              "benchmark": 13.673,
+              "excess_mean_ann": -35.219
+            },
+            "2024": {
+              "strategy": -4.776,
+              "benchmark": -16.942,
+              "excess_mean_ann": 12.4
+            },
+            "2025": {
+              "strategy": -1.878,
+              "benchmark": 26.146,
+              "excess_mean_ann": -27.343
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14414,
+            "blocked_entry": 6,
+            "delayed_exit": 47,
+            "delisted_exit": 34,
+            "forced_window_end_exit": 0
+          }
+        }
+      }
+    },
+    "turnover_3e9": {
+      "universe_median_names": 586.0,
+      "dev": {
+        "REV5_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -27.46915,
+          "benchmark_cagr_pct": -7.047264,
+          "strategy_mean_ann_pct": -28.637896,
+          "excess_mean_ann_pct": -24.551149,
+          "excess_ci95_ann_pct": [
+            -39.251976,
+            -8.628833
+          ],
+          "excess_p_bootstrap": 0.9996,
+          "excess_t_newey_west": -3.297608,
+          "strategy_sharpe": -1.09174,
+          "strategy_mdd_pct": -83.890506,
+          "avg_invested_pct": 84.166806,
+          "trades": 24600,
+          "trade_hit_rate_net_pct": 41.337398,
+          "trade_mean_gross_pct": -0.137386,
+          "trade_mean_net_pct": -0.704935,
+          "cost_per_trade_pct": 0.56755,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -21.449,
+              "benchmark": -19.924,
+              "excess_mean_ann": 0.07
+            },
+            "2019": {
+              "strategy": -39.111,
+              "benchmark": -10.291,
+              "excess_mean_ann": -38.891
+            },
+            "2020": {
+              "strategy": 12.57,
+              "benchmark": 35.096,
+              "excess_mean_ann": -19.739
+            },
+            "2021": {
+              "strategy": -34.631,
+              "benchmark": 9.128,
+              "excess_mean_ann": -51.615
+            },
+            "2022": {
+              "strategy": -41.59,
+              "benchmark": -34.697,
+              "excess_mean_ann": -12.21
+            },
+            "2023": {
+              "strategy": 0.676,
+              "benchmark": 1.038,
+              "excess_mean_ann": -19.138
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24600,
+            "blocked_entry": 40,
+            "delayed_exit": 93,
+            "delisted_exit": 4,
+            "forced_window_end_exit": 19
+          }
+        },
+        "REV5_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -24.299744,
+          "benchmark_cagr_pct": -6.36571,
+          "strategy_mean_ann_pct": -24.161025,
+          "excess_mean_ann_pct": -20.798496,
+          "excess_ci95_ann_pct": [
+            -32.896006,
+            -7.864207
+          ],
+          "excess_p_bootstrap": 0.9998,
+          "excess_t_newey_west": -3.33264,
+          "strategy_sharpe": -0.895321,
+          "strategy_mdd_pct": -80.557949,
+          "avg_invested_pct": 90.744194,
+          "trades": 24600,
+          "trade_hit_rate_net_pct": 39.386179,
+          "trade_mean_gross_pct": -0.60658,
+          "trade_mean_net_pct": -1.171478,
+          "cost_per_trade_pct": 0.564898,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -23.768,
+              "benchmark": -19.924,
+              "excess_mean_ann": -3.162
+            },
+            "2019": {
+              "strategy": -30.381,
+              "benchmark": -10.291,
+              "excess_mean_ann": -24.953
+            },
+            "2020": {
+              "strategy": 17.026,
+              "benchmark": 35.096,
+              "excess_mean_ann": -15.151
+            },
+            "2021": {
+              "strategy": -34.756,
+              "benchmark": 9.128,
+              "excess_mean_ann": -51.914
+            },
+            "2022": {
+              "strategy": -38.163,
+              "benchmark": -34.697,
+              "excess_mean_ann": -5.93
+            },
+            "2023": {
+              "strategy": 1.314,
+              "benchmark": 4.587,
+              "excess_mean_ann": -81.313
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24600,
+            "blocked_entry": 40,
+            "delayed_exit": 135,
+            "delisted_exit": 12,
+            "forced_window_end_exit": 30
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -35.733399,
+          "benchmark_cagr_pct": -7.047264,
+          "strategy_mean_ann_pct": -41.403499,
+          "excess_mean_ann_pct": -37.316752,
+          "excess_ci95_ann_pct": [
+            -53.270941,
+            -21.671239
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.616806,
+          "strategy_sharpe": -1.759545,
+          "strategy_mdd_pct": -88.974319,
+          "avg_invested_pct": 79.265677,
+          "trades": 24526,
+          "trade_hit_rate_net_pct": 40.185925,
+          "trade_mean_gross_pct": -0.242052,
+          "trade_mean_net_pct": -0.816427,
+          "cost_per_trade_pct": 0.574375,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -46.227,
+              "benchmark": -19.924,
+              "excess_mean_ann": -42.147
+            },
+            "2019": {
+              "strategy": -20.35,
+              "benchmark": -10.291,
+              "excess_mean_ann": -12.411
+            },
+            "2020": {
+              "strategy": -22.089,
+              "benchmark": 35.096,
+              "excess_mean_ann": -56.289
+            },
+            "2021": {
+              "strategy": -23.277,
+              "benchmark": 9.128,
+              "excess_mean_ann": -35.457
+            },
+            "2022": {
+              "strategy": -54.256,
+              "benchmark": -34.697,
+              "excess_mean_ann": -37.436
+            },
+            "2023": {
+              "strategy": -2.366,
+              "benchmark": 1.038,
+              "excess_mean_ann": -173.24
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24526,
+            "blocked_entry": 114,
+            "delayed_exit": 56,
+            "delisted_exit": 3,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -19.423233,
+          "benchmark_cagr_pct": -6.36571,
+          "strategy_mean_ann_pct": -18.920415,
+          "excess_mean_ann_pct": -15.557886,
+          "excess_ci95_ann_pct": [
+            -29.013855,
+            -2.007396
+          ],
+          "excess_p_bootstrap": 0.9894,
+          "excess_t_newey_west": -2.226959,
+          "strategy_sharpe": -0.819868,
+          "strategy_mdd_pct": -67.967469,
+          "avg_invested_pct": 88.848558,
+          "trades": 24526,
+          "trade_hit_rate_net_pct": 42.004403,
+          "trade_mean_gross_pct": -0.161204,
+          "trade_mean_net_pct": -0.735553,
+          "cost_per_trade_pct": 0.574348,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -35.149,
+              "benchmark": -19.924,
+              "excess_mean_ann": -22.57
+            },
+            "2019": {
+              "strategy": -8.636,
+              "benchmark": -10.291,
+              "excess_mean_ann": 1.561
+            },
+            "2020": {
+              "strategy": 8.625,
+              "benchmark": 35.096,
+              "excess_mean_ann": -22.706
+            },
+            "2021": {
+              "strategy": -3.913,
+              "benchmark": 9.128,
+              "excess_mean_ann": -12.886
+            },
+            "2022": {
+              "strategy": -43.044,
+              "benchmark": -34.697,
+              "excess_mean_ann": -15.184
+            },
+            "2023": {
+              "strategy": -1.985,
+              "benchmark": 4.587,
+              "excess_mean_ann": -164.498
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24526,
+            "blocked_entry": 114,
+            "delayed_exit": 47,
+            "delisted_exit": 6,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -26.41452,
+          "benchmark_cagr_pct": -7.047264,
+          "strategy_mean_ann_pct": -29.592898,
+          "excess_mean_ann_pct": -25.506151,
+          "excess_ci95_ann_pct": [
+            -40.817169,
+            -10.219637
+          ],
+          "excess_p_bootstrap": 0.999,
+          "excess_t_newey_west": -3.132735,
+          "strategy_sharpe": -2.038062,
+          "strategy_mdd_pct": -78.51857,
+          "avg_invested_pct": 79.745453,
+          "trades": 24636,
+          "trade_hit_rate_net_pct": 40.002435,
+          "trade_mean_gross_pct": -0.00446,
+          "trade_mean_net_pct": -0.585397,
+          "cost_per_trade_pct": 0.580937,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.741,
+              "benchmark": -19.924,
+              "excess_mean_ann": -14.438
+            },
+            "2019": {
+              "strategy": -27.404,
+              "benchmark": -10.291,
+              "excess_mean_ann": -22.725
+            },
+            "2020": {
+              "strategy": -25.564,
+              "benchmark": 35.096,
+              "excess_mean_ann": -64.336
+            },
+            "2021": {
+              "strategy": -18.209,
+              "benchmark": 9.128,
+              "excess_mean_ann": -30.311
+            },
+            "2022": {
+              "strategy": -28.41,
+              "benchmark": -34.697,
+              "excess_mean_ann": 6.835
+            },
+            "2023": {
+              "strategy": -1.475,
+              "benchmark": 1.038,
+              "excess_mean_ann": -127.195
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24636,
+            "blocked_entry": 4,
+            "delayed_exit": 10,
+            "delisted_exit": 8,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -15.016783,
+          "benchmark_cagr_pct": -6.36571,
+          "strategy_mean_ann_pct": -15.136945,
+          "excess_mean_ann_pct": -11.774415,
+          "excess_ci95_ann_pct": [
+            -26.683821,
+            3.408066
+          ],
+          "excess_p_bootstrap": 0.9416,
+          "excess_t_newey_west": -1.475211,
+          "strategy_sharpe": -1.009479,
+          "strategy_mdd_pct": -59.196619,
+          "avg_invested_pct": 89.309189,
+          "trades": 24636,
+          "trade_hit_rate_net_pct": 42.214645,
+          "trade_mean_gross_pct": -0.01651,
+          "trade_mean_net_pct": -0.596947,
+          "cost_per_trade_pct": 0.580437,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -19.121,
+              "benchmark": -19.924,
+              "excess_mean_ann": -1.292
+            },
+            "2019": {
+              "strategy": -16.851,
+              "benchmark": -10.291,
+              "excess_mean_ann": -8.792
+            },
+            "2020": {
+              "strategy": -13.106,
+              "benchmark": 35.096,
+              "excess_mean_ann": -48.419
+            },
+            "2021": {
+              "strategy": -5.52,
+              "benchmark": 9.128,
+              "excess_mean_ann": -15.634
+            },
+            "2022": {
+              "strategy": -18.862,
+              "benchmark": -34.697,
+              "excess_mean_ann": 19.694
+            },
+            "2023": {
+              "strategy": 0.172,
+              "benchmark": 4.587,
+              "excess_mean_ann": -109.489
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24636,
+            "blocked_entry": 4,
+            "delayed_exit": 11,
+            "delisted_exit": 22,
+            "forced_window_end_exit": 0
+          }
+        }
+      },
+      "validation": {
+        "REV5_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -30.052677,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": -32.554043,
+          "excess_mean_ann_pct": -33.421574,
+          "excess_ci95_ann_pct": [
+            -54.053648,
+            -13.25769
+          ],
+          "excess_p_bootstrap": 0.9994,
+          "excess_t_newey_west": -3.23022,
+          "strategy_sharpe": -1.296194,
+          "strategy_mdd_pct": -68.670339,
+          "avg_invested_pct": 83.284379,
+          "trades": 14501,
+          "trade_hit_rate_net_pct": 40.169643,
+          "trade_mean_gross_pct": -0.244829,
+          "trade_mean_net_pct": -0.724906,
+          "cost_per_trade_pct": 0.480077,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -36.348,
+              "benchmark": 5.116,
+              "excess_mean_ann": -50.046
+            },
+            "2024": {
+              "strategy": -28.347,
+              "benchmark": -25.187,
+              "excess_mean_ann": -4.133
+            },
+            "2025": {
+              "strategy": -22.146,
+              "benchmark": 22.0,
+              "excess_mean_ann": -46.19
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14501,
+            "blocked_entry": 19,
+            "delayed_exit": 48,
+            "delisted_exit": 24,
+            "forced_window_end_exit": 0
+          }
+        },
+        "REV5_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -24.415425,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": -25.020592,
+          "excess_mean_ann_pct": -25.888124,
+          "excess_ci95_ann_pct": [
+            -42.818053,
+            -8.793228
+          ],
+          "excess_p_bootstrap": 0.9986,
+          "excess_t_newey_west": -2.969473,
+          "strategy_sharpe": -1.029952,
+          "strategy_mdd_pct": -61.381318,
+          "avg_invested_pct": 90.338149,
+          "trades": 14401,
+          "trade_hit_rate_net_pct": 38.615374,
+          "trade_mean_gross_pct": -0.602752,
+          "trade_mean_net_pct": -1.080825,
+          "cost_per_trade_pct": 0.478073,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -28.111,
+              "benchmark": 5.116,
+              "excess_mean_ann": -37.897
+            },
+            "2024": {
+              "strategy": -30.007,
+              "benchmark": -25.187,
+              "excess_mean_ann": -6.448
+            },
+            "2025": {
+              "strategy": -11.666,
+              "benchmark": 22.0,
+              "excess_mean_ann": -33.38
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14401,
+            "blocked_entry": 19,
+            "delayed_exit": 72,
+            "delisted_exit": 46,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -16.04438,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": -15.406779,
+          "excess_mean_ann_pct": -16.27431,
+          "excess_ci95_ann_pct": [
+            -35.097972,
+            2.63658
+          ],
+          "excess_p_bootstrap": 0.9552,
+          "excess_t_newey_west": -1.726158,
+          "strategy_sharpe": -0.757072,
+          "strategy_mdd_pct": -55.920535,
+          "avg_invested_pct": 79.118613,
+          "trades": 14451,
+          "trade_hit_rate_net_pct": 43.803197,
+          "trade_mean_gross_pct": 0.18349,
+          "trade_mean_net_pct": -0.301278,
+          "cost_per_trade_pct": 0.484768,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -17.908,
+              "benchmark": 5.116,
+              "excess_mean_ann": -25.564
+            },
+            "2024": {
+              "strategy": -29.968,
+              "benchmark": -25.187,
+              "excess_mean_ann": -7.483
+            },
+            "2025": {
+              "strategy": 4.806,
+              "benchmark": 22.0,
+              "excess_mean_ann": -15.772
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14451,
+            "blocked_entry": 69,
+            "delayed_exit": 30,
+            "delisted_exit": 1,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": 3.834218,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": 5.775108,
+          "excess_mean_ann_pct": 4.907577,
+          "excess_ci95_ann_pct": [
+            -13.541992,
+            23.375198
+          ],
+          "excess_p_bootstrap": 0.3092,
+          "excess_t_newey_west": 0.536934,
+          "strategy_sharpe": 0.288129,
+          "strategy_mdd_pct": -38.134312,
+          "avg_invested_pct": 88.329135,
+          "trades": 14352,
+          "trade_hit_rate_net_pct": 45.533724,
+          "trade_mean_gross_pct": 0.695664,
+          "trade_mean_net_pct": 0.209052,
+          "cost_per_trade_pct": 0.486613,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -1.692,
+              "benchmark": 5.116,
+              "excess_mean_ann": -7.19
+            },
+            "2024": {
+              "strategy": -16.222,
+              "benchmark": -25.187,
+              "excess_mean_ann": 11.12
+            },
+            "2025": {
+              "strategy": 35.4,
+              "benchmark": 22.0,
+              "excess_mean_ann": 10.841
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14352,
+            "blocked_entry": 68,
+            "delayed_exit": 40,
+            "delisted_exit": 2,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -11.816537,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": -11.69212,
+          "excess_mean_ann_pct": -12.559651,
+          "excess_ci95_ann_pct": [
+            -32.884192,
+            7.725641
+          ],
+          "excess_p_bootstrap": 0.878,
+          "excess_t_newey_west": -1.203597,
+          "strategy_sharpe": -0.883493,
+          "strategy_mdd_pct": -43.87488,
+          "avg_invested_pct": 79.576744,
+          "trades": 14520,
+          "trade_hit_rate_net_pct": 43.725895,
+          "trade_mean_gross_pct": 0.285645,
+          "trade_mean_net_pct": -0.228595,
+          "cost_per_trade_pct": 0.51424,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -23.36,
+              "benchmark": 5.116,
+              "excess_mean_ann": -33.721
+            },
+            "2024": {
+              "strategy": -17.676,
+              "benchmark": -25.187,
+              "excess_mean_ann": 8.128
+            },
+            "2025": {
+              "strategy": 10.107,
+              "benchmark": 22.0,
+              "excess_mean_ann": -12.083
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14520,
+            "blocked_entry": 0,
+            "delayed_exit": 11,
+            "delisted_exit": 0,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": 0.418668,
+          "benchmark_cagr_pct": -1.420092,
+          "strategy_mean_ann_pct": 1.334049,
+          "excess_mean_ann_pct": 0.466518,
+          "excess_ci95_ann_pct": [
+            -20.000521,
+            20.891654
+          ],
+          "excess_p_bootstrap": 0.4716,
+          "excess_t_newey_west": 0.044445,
+          "strategy_sharpe": 0.09875,
+          "strategy_mdd_pct": -25.179598,
+          "avg_invested_pct": 88.891833,
+          "trades": 14420,
+          "trade_hit_rate_net_pct": 47.441054,
+          "trade_mean_gross_pct": 0.579641,
+          "trade_mean_net_pct": 0.064176,
+          "cost_per_trade_pct": 0.515465,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -14.26,
+              "benchmark": 5.116,
+              "excess_mean_ann": -22.135
+            },
+            "2024": {
+              "strategy": -4.492,
+              "benchmark": -25.187,
+              "excess_mean_ann": 23.52
+            },
+            "2025": {
+              "strategy": 23.604,
+              "benchmark": 22.0,
+              "excess_mean_ann": 0.011
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14420,
+            "blocked_entry": 0,
+            "delayed_exit": 11,
+            "delisted_exit": 0,
+            "forced_window_end_exit": 0
+          }
+        }
+      }
+    },
+    "cost_x2": {
+      "universe_median_names": 986.0,
+      "dev": {
+        "REV5_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -35.04125,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -40.344743,
+          "excess_mean_ann_pct": -42.426321,
+          "excess_ci95_ann_pct": [
+            -57.364842,
+            -25.432294
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.367506,
+          "strategy_sharpe": -1.722676,
+          "strategy_mdd_pct": -90.204049,
+          "avg_invested_pct": 85.718134,
+          "trades": 24586,
+          "trade_hit_rate_net_pct": 39.205239,
+          "trade_mean_gross_pct": -0.125682,
+          "trade_mean_net_pct": -1.121967,
+          "cost_per_trade_pct": 0.996285,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -37.389,
+              "benchmark": -14.642,
+              "excess_mean_ann": -30.171
+            },
+            "2019": {
+              "strategy": -45.131,
+              "benchmark": -0.921,
+              "excess_mean_ann": -60.34
+            },
+            "2020": {
+              "strategy": -5.126,
+              "benchmark": 37.489,
+              "excess_mean_ann": -40.272
+            },
+            "2021": {
+              "strategy": -38.215,
+              "benchmark": 15.86,
+              "excess_mean_ann": -63.9
+            },
+            "2022": {
+              "strategy": -40.172,
+              "benchmark": -30.841,
+              "excess_mean_ann": -16.71
+            },
+            "2023": {
+              "strategy": 0.028,
+              "benchmark": 1.27,
+              "excess_mean_ann": -63.718
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24586,
+            "blocked_entry": 54,
+            "delayed_exit": 106,
+            "delisted_exit": 3,
+            "forced_window_end_exit": 36
+          }
+        },
+        "REV5_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -27.562235,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -29.010852,
+          "excess_mean_ann_pct": -31.806974,
+          "excess_ci95_ann_pct": [
+            -44.297328,
+            -18.257855
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.829965,
+          "strategy_sharpe": -1.148223,
+          "strategy_mdd_pct": -84.294095,
+          "avg_invested_pct": 91.057465,
+          "trades": 24586,
+          "trade_hit_rate_net_pct": 38.257545,
+          "trade_mean_gross_pct": -0.480723,
+          "trade_mean_net_pct": -1.474827,
+          "cost_per_trade_pct": 0.994104,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -28.419,
+              "benchmark": -14.642,
+              "excess_mean_ann": -16.574
+            },
+            "2019": {
+              "strategy": -31.79,
+              "benchmark": -0.921,
+              "excess_mean_ann": -37.643
+            },
+            "2020": {
+              "strategy": 4.788,
+              "benchmark": 37.489,
+              "excess_mean_ann": -29.103
+            },
+            "2021": {
+              "strategy": -35.861,
+              "benchmark": 15.86,
+              "excess_mean_ann": -59.925
+            },
+            "2022": {
+              "strategy": -37.763,
+              "benchmark": -30.841,
+              "excess_mean_ann": -11.786
+            },
+            "2023": {
+              "strategy": 0.06,
+              "benchmark": 4.909,
+              "excess_mean_ann": -120.625
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24586,
+            "blocked_entry": 54,
+            "delayed_exit": 163,
+            "delisted_exit": 9,
+            "forced_window_end_exit": 53
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -44.680864,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -56.554959,
+          "excess_mean_ann_pct": -58.636537,
+          "excess_ci95_ann_pct": [
+            -74.074375,
+            -43.24469
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -7.284105,
+          "strategy_sharpe": -2.491042,
+          "strategy_mdd_pct": -94.64718,
+          "avg_invested_pct": 79.188171,
+          "trades": 24502,
+          "trade_hit_rate_net_pct": 37.837728,
+          "trade_mean_gross_pct": -0.086828,
+          "trade_mean_net_pct": -1.117961,
+          "cost_per_trade_pct": 1.031133,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -52.61,
+              "benchmark": -14.642,
+              "excess_mean_ann": -61.668
+            },
+            "2019": {
+              "strategy": -39.796,
+              "benchmark": -0.921,
+              "excess_mean_ann": -51.473
+            },
+            "2020": {
+              "strategy": -35.861,
+              "benchmark": 37.489,
+              "excess_mean_ann": -78.322
+            },
+            "2021": {
+              "strategy": -34.848,
+              "benchmark": 15.86,
+              "excess_mean_ann": -58.373
+            },
+            "2022": {
+              "strategy": -52.529,
+              "benchmark": -30.841,
+              "excess_mean_ann": -39.824
+            },
+            "2023": {
+              "strategy": -3.156,
+              "benchmark": 1.27,
+              "excess_mean_ann": -226.028
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24502,
+            "blocked_entry": 138,
+            "delayed_exit": 55,
+            "delisted_exit": 3,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -24.023064,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -24.974719,
+          "excess_mean_ann_pct": -27.770841,
+          "excess_ci95_ann_pct": [
+            -40.657051,
+            -14.797905
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.992298,
+          "strategy_sharpe": -1.121545,
+          "strategy_mdd_pct": -76.342958,
+          "avg_invested_pct": 88.789269,
+          "trades": 24502,
+          "trade_hit_rate_net_pct": 40.596686,
+          "trade_mean_gross_pct": 0.046397,
+          "trade_mean_net_pct": -0.985825,
+          "cost_per_trade_pct": 1.032222,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -37.663,
+              "benchmark": -14.642,
+              "excess_mean_ann": -33.276
+            },
+            "2019": {
+              "strategy": -25.409,
+              "benchmark": -0.921,
+              "excess_mean_ann": -29.64
+            },
+            "2020": {
+              "strategy": -2.191,
+              "benchmark": 37.489,
+              "excess_mean_ann": -35.433
+            },
+            "2021": {
+              "strategy": -7.925,
+              "benchmark": 15.86,
+              "excess_mean_ann": -23.54
+            },
+            "2022": {
+              "strategy": -36.711,
+              "benchmark": -30.841,
+              "excess_mean_ann": -10.613
+            },
+            "2023": {
+              "strategy": -2.473,
+              "benchmark": 4.909,
+              "excess_mean_ann": -185.019
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24502,
+            "blocked_entry": 138,
+            "delayed_exit": 43,
+            "delisted_exit": 6,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2018-01-03",
+          "end": "2023-01-06",
+          "sessions": 1236,
+          "strategy_cagr_pct": -44.347706,
+          "benchmark_cagr_pct": -1.178193,
+          "strategy_mean_ann_pct": -57.657886,
+          "excess_mean_ann_pct": -59.739464,
+          "excess_ci95_ann_pct": [
+            -76.073365,
+            -43.321505
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -6.946825,
+          "strategy_sharpe": -4.367775,
+          "strategy_mdd_pct": -94.449745,
+          "avg_invested_pct": 79.747284,
+          "trades": 24637,
+          "trade_hit_rate_net_pct": 31.903235,
+          "trade_mean_gross_pct": 0.019593,
+          "trade_mean_net_pct": -1.138621,
+          "cost_per_trade_pct": 1.158214,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -45.779,
+              "benchmark": -14.642,
+              "excess_mean_ann": -49.214
+            },
+            "2019": {
+              "strategy": -42.692,
+              "benchmark": -0.921,
+              "excess_mean_ann": -57.244
+            },
+            "2020": {
+              "strategy": -45.174,
+              "benchmark": 37.489,
+              "excess_mean_ann": -97.834
+            },
+            "2021": {
+              "strategy": -39.159,
+              "benchmark": 15.86,
+              "excess_mean_ann": -66.627
+            },
+            "2022": {
+              "strategy": -44.427,
+              "benchmark": -30.841,
+              "excess_mean_ann": -25.129
+            },
+            "2023": {
+              "strategy": -1.999,
+              "benchmark": 1.27,
+              "excess_mean_ann": -165.77
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24637,
+            "blocked_entry": 3,
+            "delayed_exit": 6,
+            "delisted_exit": 5,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2018-01-03",
+          "end": "2023-01-13",
+          "sessions": 1241,
+          "strategy_cagr_pct": -25.370494,
+          "benchmark_cagr_pct": -0.4625,
+          "strategy_mean_ann_pct": -28.299525,
+          "excess_mean_ann_pct": -31.095647,
+          "excess_ci95_ann_pct": [
+            -47.079965,
+            -14.962226
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -3.70254,
+          "strategy_sharpe": -2.063998,
+          "strategy_mdd_pct": -77.610397,
+          "avg_invested_pct": 89.332421,
+          "trades": 24637,
+          "trade_hit_rate_net_pct": 36.899785,
+          "trade_mean_gross_pct": 0.043439,
+          "trade_mean_net_pct": -1.114786,
+          "cost_per_trade_pct": 1.158225,
+          "yearly_pct": {
+            "2018": {
+              "strategy": -29.984,
+              "benchmark": -14.642,
+              "excess_mean_ann": -22.731
+            },
+            "2019": {
+              "strategy": -25.499,
+              "benchmark": -0.921,
+              "excess_mean_ann": -30.364
+            },
+            "2020": {
+              "strategy": -25.032,
+              "benchmark": 37.489,
+              "excess_mean_ann": -65.917
+            },
+            "2021": {
+              "strategy": -18.02,
+              "benchmark": 15.86,
+              "excess_mean_ann": -36.31
+            },
+            "2022": {
+              "strategy": -26.002,
+              "benchmark": -30.841,
+              "excess_mean_ann": 4.19
+            },
+            "2023": {
+              "strategy": -0.236,
+              "benchmark": 4.909,
+              "excess_mean_ann": -127.529
+            }
+          },
+          "counters": {
+            "signals": 1232,
+            "slots": 24640,
+            "filled": 24637,
+            "blocked_entry": 3,
+            "delayed_exit": 6,
+            "delisted_exit": 10,
+            "forced_window_end_exit": 0
+          }
+        }
+      },
+      "validation": {
+        "REV5_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -40.72097,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -49.590834,
+          "excess_mean_ann_pct": -54.911199,
+          "excess_ci95_ann_pct": [
+            -76.048879,
+            -34.150794
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.132757,
+          "strategy_sharpe": -2.164888,
+          "strategy_mdd_pct": -79.908233,
+          "avg_invested_pct": 84.696601,
+          "trades": 14497,
+          "trade_hit_rate_net_pct": 37.98717,
+          "trade_mean_gross_pct": -0.282573,
+          "trade_mean_net_pct": -1.201529,
+          "cost_per_trade_pct": 0.918956,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -48.083,
+              "benchmark": 9.216,
+              "excess_mean_ann": -75.149
+            },
+            "2024": {
+              "strategy": -39.27,
+              "benchmark": -20.394,
+              "excess_mean_ann": -28.352
+            },
+            "2025": {
+              "strategy": -30.27,
+              "benchmark": 26.121,
+              "excess_mean_ann": -61.284
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14497,
+            "blocked_entry": 23,
+            "delayed_exit": 53,
+            "delisted_exit": 27,
+            "forced_window_end_exit": 0
+          }
+        },
+        "REV5_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -31.727573,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -35.608915,
+          "excess_mean_ann_pct": -40.92928,
+          "excess_ci95_ann_pct": [
+            -57.998208,
+            -23.50743
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -4.530498,
+          "strategy_sharpe": -1.585598,
+          "strategy_mdd_pct": -70.042626,
+          "avg_invested_pct": 90.707679,
+          "trades": 14397,
+          "trade_hit_rate_net_pct": 37.271654,
+          "trade_mean_gross_pct": -0.689444,
+          "trade_mean_net_pct": -1.6046,
+          "cost_per_trade_pct": 0.915156,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -37.042,
+              "benchmark": 9.216,
+              "excess_mean_ann": -55.587
+            },
+            "2024": {
+              "strategy": -34.92,
+              "benchmark": -20.394,
+              "excess_mean_ann": -20.886
+            },
+            "2025": {
+              "strategy": -19.214,
+              "benchmark": 26.121,
+              "excess_mean_ann": -46.36
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14397,
+            "blocked_entry": 23,
+            "delayed_exit": 69,
+            "delisted_exit": 52,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -34.289076,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -40.136755,
+          "excess_mean_ann_pct": -45.45712,
+          "excess_ci95_ann_pct": [
+            -62.040879,
+            -28.63658
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.094602,
+          "strategy_sharpe": -2.108489,
+          "strategy_mdd_pct": -72.747886,
+          "avg_invested_pct": 79.065574,
+          "trades": 14439,
+          "trade_hit_rate_net_pct": 39.192465,
+          "trade_mean_gross_pct": 0.151631,
+          "trade_mean_net_pct": -0.81594,
+          "cost_per_trade_pct": 0.967571,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -34.016,
+              "benchmark": 9.216,
+              "excess_mean_ann": -52.059
+            },
+            "2024": {
+              "strategy": -47.359,
+              "benchmark": -20.394,
+              "excess_mean_ann": -43.448
+            },
+            "2025": {
+              "strategy": -14.697,
+              "benchmark": 26.121,
+              "excess_mean_ann": -40.826
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14439,
+            "blocked_entry": 81,
+            "delayed_exit": 37,
+            "delisted_exit": 11,
+            "forced_window_end_exit": 0
+          }
+        },
+        "HIGH52_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -10.032958,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -8.809669,
+          "excess_mean_ann_pct": -14.130034,
+          "excess_ci95_ann_pct": [
+            -31.094398,
+            2.637016
+          ],
+          "excess_p_bootstrap": 0.954,
+          "excess_t_newey_west": -1.625181,
+          "strategy_sharpe": -0.470223,
+          "strategy_mdd_pct": -52.637676,
+          "avg_invested_pct": 88.188362,
+          "trades": 14341,
+          "trade_hit_rate_net_pct": 41.782302,
+          "trade_mean_gross_pct": 0.576698,
+          "trade_mean_net_pct": -0.392926,
+          "cost_per_trade_pct": 0.969624,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -9.579,
+              "benchmark": 9.216,
+              "excess_mean_ann": -19.748
+            },
+            "2024": {
+              "strategy": -30.835,
+              "benchmark": -20.394,
+              "excess_mean_ann": -15.228
+            },
+            "2025": {
+              "strategy": 17.715,
+              "benchmark": 26.121,
+              "excess_mean_ann": -7.359
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14341,
+            "blocked_entry": 79,
+            "delayed_exit": 57,
+            "delisted_exit": 22,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H5": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -35.692621,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -43.350586,
+          "excess_mean_ann_pct": -48.670951,
+          "excess_ci95_ann_pct": [
+            -66.153036,
+            -31.030674
+          ],
+          "excess_p_bootstrap": 1.0,
+          "excess_t_newey_west": -5.344648,
+          "strategy_sharpe": -3.527321,
+          "strategy_mdd_pct": -72.758551,
+          "avg_invested_pct": 79.567154,
+          "trades": 14517,
+          "trade_hit_rate_net_pct": 33.588207,
+          "trade_mean_gross_pct": 0.272832,
+          "trade_mean_net_pct": -0.860131,
+          "cost_per_trade_pct": 1.132963,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -38.413,
+              "benchmark": 9.216,
+              "excess_mean_ann": -60.088
+            },
+            "2024": {
+              "strategy": -35.554,
+              "benchmark": -20.394,
+              "excess_mean_ann": -23.613
+            },
+            "2025": {
+              "strategy": -29.874,
+              "benchmark": 26.121,
+              "excess_mean_ann": -62.424
+            }
+          },
+          "counters": {
+            "signals": 726,
+            "slots": 14520,
+            "filled": 14517,
+            "blocked_entry": 3,
+            "delayed_exit": 11,
+            "delisted_exit": 12,
+            "forced_window_end_exit": 0
+          }
+        },
+        "LOWVOL_H10": {
+          "start": "2023-01-03",
+          "end": "2025-12-30",
+          "sessions": 730,
+          "strategy_cagr_pct": -14.277604,
+          "benchmark_cagr_pct": 3.232254,
+          "strategy_mean_ann_pct": -14.589202,
+          "excess_mean_ann_pct": -19.909567,
+          "excess_ci95_ann_pct": [
+            -37.422044,
+            -1.905601
+          ],
+          "excess_p_bootstrap": 0.9888,
+          "excess_t_newey_west": -2.168547,
+          "strategy_sharpe": -1.148428,
+          "strategy_mdd_pct": -41.638456,
+          "avg_invested_pct": 88.815609,
+          "trades": 14417,
+          "trade_hit_rate_net_pct": 39.994451,
+          "trade_mean_gross_pct": 0.558103,
+          "trade_mean_net_pct": -0.577933,
+          "cost_per_trade_pct": 1.136036,
+          "yearly_pct": {
+            "2023": {
+              "strategy": -21.463,
+              "benchmark": 9.216,
+              "excess_mean_ann": -35.002
+            },
+            "2024": {
+              "strategy": -15.352,
+              "benchmark": -20.394,
+              "excess_mean_ann": 4.59
+            },
+            "2025": {
+              "strategy": -3.729,
+              "benchmark": 26.121,
+              "excess_mean_ann": -29.395
+            }
+          },
+          "counters": {
+            "signals": 721,
+            "slots": 14420,
+            "filled": 14417,
+            "blocked_entry": 3,
+            "delayed_exit": 11,
+            "delisted_exit": 27,
+            "forced_window_end_exit": 0
+          }
+        }
+      }
+    }
+  }
+}
